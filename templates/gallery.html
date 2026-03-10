@@ -1,0 +1,314 @@
+{% extends "layout.html" %}
+
+{% block title %}Gallery - Farm Fresh{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="-12">
+            <h1 class="text-center mb-5">Our Farm Gallery</h1>
+            <p class="text-center text-muted mb-5">Take a visual journey through our farms and see the freshness we deliver</p>
+        </div>
+    </div>
+
+    <!-- Farm Images Gallery -->
+    <section class="mb-5">
+        <h2 class="text-center mb-4">Our Beautiful Farms</h2>
+        <div class="row gallery-grid">
+            <div class="col-md-4 col-sm-6 mb-4">
+                <div class="gallery-item">
+                    <img src="https://via.placeholder.com/400x300/28a745/ffffff?text=Farm+View+1" 
+                         class="img-fluid rounded shadow" 
+                         alt="Farm View 1"
+                         data-bs-toggle="modal" 
+                         data-bs-target="#imageModal"
+                         data-image="https://via.placeholder.com/800x600/28a745/ffffff?text=Farm+View+1"
+                         data-title="Our Main Farm">
+                    <div class="gallery-overlay">
+                        <i class="fas fa-search-plus"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-4">
+                <div class="gallery-item">
+                    <img src="https://via.placeholder.com/400x300/28a745/ffffff?text=Greenhouse" 
+                         class="img-fluid rounded shadow" 
+                         alt="Greenhouse"
+                         data-bs-toggle="modal" 
+                         data-bs-target="#imageModal"
+                         data-image="https://via.placeholder.com/800x600/28a745/ffffff?text=Greenhouse"
+                         data-title="Organic Greenhouse">
+                    <div class="gallery-overlay">
+                        <i class="fas fa-search-plus"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-4">
+                <div class="gallery-item">
+                    <img src="https://via.placeholder.com/400x300/28a745/ffffff?text=Fields" 
+                         class="img-fluid rounded shadow" 
+                         alt="Fields"
+                         data-bs-toggle="modal" 
+                         data-bs-target="#imageModal"
+                         data-image="https://via.placeholder.com/800x600/28a745/ffffff?text=Fields"
+                         data-title="Vast Vegetable Fields">
+                    <div class="gallery-overlay">
+                        <i class="fas fa-search-plus"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-4">
+                <div class="gallery-item">
+                    <img src="https://via.placeholder.com/400x300/28a745/ffffff?text=Sunrise" 
+                         class="img-fluid rounded shadow" 
+                         alt="Sunrise at Farm"
+                         data-bs-toggle="modal" 
+                         data-bs-target="#imageModal"
+                         data-image="https://via.placeholder.com/800x600/28a745/ffffff?text=Sunrise"
+                         data-title="Sunrise at Our Farm">
+                    <div class="gallery-overlay">
+                        <i class="fas fa-search-plus"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-4">
+                <div class="gallery-item">
+                    <img src="https://via.placeholder.com/400x300/28a745/ffffff?text=Irrigation" 
+                         class="img-fluid rounded shadow" 
+                         alt="Irrigation System"
+                         data-bs-toggle="modal" 
+                         data-bs-target="#imageModal"
+                         data-image="https://via.placeholder.com/800x600/28a745/ffffff?text=Irrigation"
+                         data-title="Modern Irrigation System">
+                    <div class="gallery-overlay">
+                        <i class="fas fa-search-plus"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-4">
+                <div class="gallery-item">
+                    <img src="https://via.placeholder.com/400x300/28a745/ffffff?text=Farm+Team" 
+                         class="img-fluid rounded shadow" 
+                         alt="Farm Team"
+                         data-bs-toggle="modal" 
+                         data-bs-target="#imageModal"
+                         data-image="https://via.placeholder.com/800x600/28a745/ffffff?text=Farm+Team"
+                         data-title="Our Dedicated Farm Team">
+                    <div class="gallery-overlay">
+                        <i class="fas fa-search-plus"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Vegetables Gallery -->
+    <section class="mb-5 bg-light py-5 rounded">
+        <div class="container">
+            <h2 class="text-center mb-4">Fresh Vegetables</h2>
+            <div class="row">
+                {% for vegetable in vegetables %}
+                <div class="col-md-3 col-sm-6 mb-4">
+                    <div class="vegetable-gallery-item">
+                        {% if vegetable.image %}
+                        <img src="{{ url_for('static', filename='uploads/' + vegetable.image) }}" 
+                             class="img-fluid rounded shadow" 
+                             alt="{{ vegetable.name }}">
+                        {% else %}
+                        <div class="bg-success bg-opacity-10 rounded d-flex align-items-center justify-content-center" 
+                             style="height: 200px;">
+                            <i class="fas fa-carrot fa-3x text-success"></i>
+                        </div>
+                        {% endif %}
+                        <div class="text-center mt-2">
+                            <h6>{{ vegetable.name }}</h6>
+                            <small class="text-muted">₹{{ "%.2f"|format(vegetable.price) }}/kg</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Gallery -->
+    <section class="mb-5">
+        <h2 class="text-center mb-4">Our Process in Pictures</h2>
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <img src="https://via.placeholder.com/600x400/28a745/ffffff?text=Harvesting" 
+                         class="card-img-top" 
+                         alt="Harvesting Process">
+                    <div class="card-body">
+                        <h5 class="card-title">Harvesting</h5>
+                        <p class="card-text">Early morning harvesting when vegetables are at their freshest.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <img src="https://via.placeholder.com/600x400/28a745/ffffff?text=Quality+Check" 
+                         class="card-img-top" 
+                         alt="Quality Check">
+                    <div class="card-body">
+                        <h5 class="card-title">Quality Control</h5>
+                        <p class="card-text">Rigorous quality checks ensure only the best produce reaches you.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <img src="https://via.placeholder.com/600x400/28a745/ffffff?text=Packaging" 
+                         class="card-img-top" 
+                         alt="Packaging">
+                    <div class="card-body">
+                        <h5 class="card-title">Eco-Friendly Packaging</h5>
+                        <p class="card-text">Sustainable packaging that maintains freshness without harming the environment.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <img src="https://via.placeholder.com/600x400/28a745/ffffff?text=Delivery" 
+                         class="card-img-top" 
+                         alt="Delivery">
+                    <div class="card-body">
+                        <h5 class="card-title">Fast Delivery</h5>
+                        <p class="card-text">Refrigerated delivery vehicles ensure freshness during transit.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Customer Stories -->
+    <section class="mb-5 bg-success text-white py-5 rounded">
+        <div class="container">
+            <h2 class="text-center mb-4">Customer Stories</h2>
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-user-circle fa-4x"></i>
+                        </div>
+                        <h5>Sarah's Kitchen</h5>
+                        <p>"The fresh vegetables from Farm Fresh have transformed my cooking. Everything tastes so much better!"</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-user-circle fa-4x"></i>
+                        </div>
+                        <h5>Mike's Family</h5>
+                        <p>"My kids love the vegetables now. The quality and freshness make such a difference."</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-user-circle fa-4x"></i>
+                        </div>
+                        <h5>Lisa's Restaurant</h5>
+                        <p>"As a chef, I only use the best ingredients. Farm Fresh delivers consistently excellent quality."</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Image Title</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" class="img-fluid" alt="Gallery Image">
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.gallery-item {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    border-radius: 8px;
+}
+
+.gallery-item img {
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover img {
+    transform: scale(1.05);
+}
+
+.gallery-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(40, 167, 69, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 8px;
+}
+
+.gallery-item:hover .gallery-overlay {
+    opacity: 1;
+}
+
+.gallery-overlay i {
+    color: white;
+    font-size: 2rem;
+}
+
+.vegetable-gallery-item {
+    text-align: center;
+}
+
+.vegetable-gallery-item img {
+    height: 200px;
+    object-fit: cover;
+    width: 100%;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+}
+
+.vegetable-gallery-item:hover img {
+    transform: scale(1.05);
+}
+
+.gallery-grid {
+    margin-bottom: 3rem;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const imageModal = document.getElementById('imageModal');
+    const modalImage = document.getElementById('modalImage');
+    const modalTitle = document.getElementById('modalTitle');
+    
+    imageModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const imageSrc = button.getAttribute('data-image');
+        const imageTitle = button.getAttribute('data-title');
+        
+        modalImage.src = imageSrc;
+        modalTitle.textContent = imageTitle;
+    });
+});
+</script>
+{% endblock %}
