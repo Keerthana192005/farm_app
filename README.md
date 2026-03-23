@@ -269,7 +269,11 @@ For issues and questions:
 
 ## License
 
-This project is for educational and demonstration purposes. Feel free to modify and use according to your needs.
+This project is proprietary commercial software. All rights reserved.
+
+© 2026 Campus Krishi. This software and its contents are protected by copyright law and international treaties. Unauthorized reproduction, distribution, or modification is strictly prohibited.
+
+For licensing inquiries, please contact the development team.
 
 ---
 
