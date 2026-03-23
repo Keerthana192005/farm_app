@@ -1,4 +1,4 @@
-// Campus Krishi - Main JavaScript File
+// Farm Fresh Vegetables - Main JavaScript File
 
 // Global Variables
 let cart = {};

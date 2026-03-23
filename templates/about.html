@@ -1,57 +1,27 @@
 {% extends "layout.html" %}
 
-{% block title %}About Us - Farm Fresh{% endblock %}
+{% block title %}About Bhooswarga - Campus Krishi{% endblock %}
 
 {% block content %}
 <div class="container py-5">
     <div class="row">
         <div class="col-12">
-            <h1 class="text-center mb-5">About Farm Fresh Vegetables</h1>
+            <h1 class="text-center mb-5">About Bhooswarga</h1>
         </div>
     </div>
 
-    <!-- Our Story -->
+    <!-- About Bhooswarga -->
     <section class="mb-5">
         <div class="row align-items-center">
             <div class="col-lg-6">
-                <h2 class="text-success mb-4">Our Story</h2>
-                <p class="lead">Farm Fresh Vegetables started as a small family farm with a simple mission: to provide fresh, organic vegetables directly from our farm to your table.</p>
-                <p>Founded in 2010, we began with just 2 acres of land and a vision to revolutionize how people access fresh produce. Today, we work with over 50 local farmers and serve thousands of happy customers across the region.</p>
-                <p>Our commitment to quality, sustainability, and customer satisfaction has made us a trusted name in fresh produce delivery.</p>
+                <h2 class="text-success mb-4">Bhooswarga – Heaven on Earth</h2>
+                <p class="lead">Bhooswarga (meaning <strong>Heaven on Earth</strong>) is an interdisciplinary urban sustainability initiative rooted in the belief that healthy soil, healthy food, and healthy communities are deeply connected.</p>
+                <p>Started as a small campus pilot at <strong>Nitte Meenakshi Institute of Technology (NMIT), Bengaluru</strong>, Bhooswarga has grown into a vibrant living laboratory where students, faculty, and volunteers come together to practice sustainable farming, climate-resilient design, and community-centric innovation.</p>
+                <p>What began as a garden is now evolving into a city-scale model for urban farming, education, and climate action.</p>
             </div>
             <div class="col-lg-6">
                 <div class="text-center">
-                    <img src="https://via.placeholder.com/500x400/28a745/ffffff?text=Our+Farm" class="img-fluid rounded shadow" alt="Our Farm">
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- What Makes Us Different -->
-    <section class="mb-5 bg-light py-5 rounded">
-        <div class="container">
-            <h2 class="text-center mb-5">What Makes Us Different</h2>
-            <div class="row text-center">
-                <div class="col-md-4 mb-4">
-                    <div class="feature-box">
-                        <i class="fas fa-leaf fa-3x text-success mb-3"></i>
-                        <h4>100% Organic</h4>
-                        <p>We never use harmful pesticides or chemicals. All our vegetables are grown naturally using sustainable farming practices.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="feature-box">
-                        <i class="fas fa-clock fa-3x text-success mb-3"></i>
-                        <h4>Farm to Table</h4>
-                        <p>Our vegetables are harvested and delivered on the same day, ensuring maximum freshness and nutritional value.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="feature-box">
-                        <i class="fas fa-handshake fa-3x text-success mb-3"></i>
-                        <h4>Direct Sourcing</h4>
-                        <p>We work directly with local farmers, eliminating middlemen and ensuring fair prices for both farmers and customers.</p>
-                    </div>
+                    <img id="bhooswarga-img" src="{{ url_for('static', filename='uploads/bhooswarga_garden.png') }}" class="img-fluid rounded shadow" alt="Bhooswarga Garden" onerror="this.onerror=null;this.src='https://via.placeholder.com/500x400/28a745/ffffff?text=Bhooswarga'">
                 </div>
             </div>
         </div>
@@ -59,121 +29,77 @@
 
     <!-- Our Team -->
     <section class="mb-5">
-        <h2 class="text-center mb-5">Meet Our Team</h2>
+        <h2 class="text-center mb-5">Our Team</h2>
         <div class="row">
             <div class="col-md-4 mb-4">
-                <div class="card text-center">
+                <div class="card text-center h-100">
                     <div class="card-body">
-                        <div class="mb-3">
-                            <i class="fas fa-user-circle fa-4x text-success"></i>
-                        </div>
-                        <h5>Rajesh Kumar</h5>
-                        <p class="text-muted">Founder & CEO</p>
-                        <p class="small">With over 15 years of farming experience, Rajesh leads our mission to provide fresh, organic produce.</p>
+                        <img src="{{ url_for('static', filename='uploads/dr_sumaraj.png') }}" class="rounded-circle mb-3" style="width: 130px; height: 130px; object-fit: cover;" alt="Dr. Sumaraj" onerror="this.onerror=null;this.src='https://via.placeholder.com/130?text=Dr+Sumaraj'">
+                        <h5 class="mb-1">Dr. Sumaraj</h5>
+                        <p class="text-muted mb-3">Assistant Professor, Department of Civil Engineering, NMIT</p>
+                        <p class="small">Dr. Sumaraj is an Assistant Professor in the Department of Civil Engineering at Nitte Meenakshi Institute of Technology, Bengaluru. She holds an M.Tech from IIT Kharagpur and a PhD from the University of Auckland, New Zealand. An expert in Environmental Engineering and Sustainable Technologies, her work focuses on translating research into real-world impact through experiential learning and community-driven initiatives. As the founder and project lead of Bhooswarga, she integrates urban farming, climate resilience, and engineering education to build inclusive, hands-on learning spaces that promote sustainability, well-being, and innovation.</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 mb-4">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <i class="fas fa-user-circle fa-4x text-success"></i>
-                        </div>
-                        <h5>Priya Sharma</h5>
-                        <p class="text-muted">Operations Manager</p>
-                        <p class="small">Priya ensures smooth operations from farm to delivery, maintaining our quality standards.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <i class="fas fa-user-circle fa-4x text-success"></i>
-                        </div>
-                        <h5>Amit Patel</h5>
-                        <p class="text-muted">Quality Control</p>
-                        <p class="small">Amit oversees quality assurance, ensuring only the freshest produce reaches our customers.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 
-    <!-- Statistics -->
-    <section class="mb-5 bg-success text-white py-5 rounded">
-        <div class="container">
-            <h2 class="text-center mb-5">Our Impact</h2>
-            <div class="row text-center">
-                <div class="col-md-3 mb-4">
-                    <div class="stat-box">
-                        <h3 class="display-4">50+</h3>
-                        <p>Local Farmers</p>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-4">
-                    <div class="stat-box">
-                        <h3 class="display-4">10,000+</h3>
-                        <p>Happy Customers</p>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-4">
-                    <div class="stat-box">
-                        <h3 class="display-4">100%</h3>
-                        <p>Organic Products</p>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-4">
-                    <div class="stat-box">
-                        <h3 class="display-4">14</h3>
-                        <p>Years of Service</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-12 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title text-success">Core Team</h5>
 
-    <!-- Certifications -->
-    <section class="mb-5">
-        <h2 class="text-center mb-5">Our Certifications</h2>
-        <div class="row text-center">
-            <div class="col-md-3 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <i class="fas fa-certificate fa-3x text-success mb-3"></i>
-                        <h5>Organic Certified</h5>
-                        <p class="small">Certified organic farming practices</p>
+                                <div class="row">
+                                    <div class="col-md-4 mb-4 text-center">
+                                        <img src="{{ url_for('static', filename='uploads/byre_gowda.png') }}" class="rounded-circle mb-3" style="width: 110px; height: 110px; object-fit: cover;" alt="Byre Gowda" onerror="this.onerror=null;this.src='https://via.placeholder.com/110?text=Byre'">
+                                        <h6 class="mb-1">Byre Gowda</h6>
+                                        <p class="small text-muted mb-2">3rd year Electronics and Communication Engineering student</p>
+                                        <p class="small">Byre Gowda is passionate about integrating IoT, AI, and energy-efficient systems into smart farming. He believes that hands-on learning in collaboration with club members fosters creativity, innovation, and holistic development.</p>
+                                    </div>
+                                    <div class="col-md-4 mb-4 text-center">
+                                        <img src="{{ url_for('static', filename='uploads/vishwadeep_k.jpg') }}" class="rounded-circle mb-3" style="width: 110px; height: 110px; object-fit: cover;" alt="Vishwadeep K" onerror="this.onerror=null;this.src='https://via.placeholder.com/110?text=Vishwadeep'">
+                                        <h6 class="mb-1">Vishwadeep K</h6>
+                                        <p class="small text-muted mb-2">3rd year Civil Engineering student</p>
+                                        <p class="small">Vishwadeep focuses on sustainable infrastructure and smart construction practices, integrating modern technologies into civil engineering solutions. He believes that hands-on learning and active collaboration with club members play a vital role in nurturing creativity and professional growth.</p>
+                                    </div>
+                                    <div class="col-md-4 mb-4 text-center">
+                                        <img src="{{ url_for('static', filename='uploads/abhishek_r.jpg') }}" class="rounded-circle mb-3" style="width: 110px; height: 110px; object-fit: cover;" alt="Abhishek R" onerror="this.onerror=null;this.src='https://via.placeholder.com/110?text=Abhishek'">
+                                        <h6 class="mb-1">Abhishek R</h6>
+                                        <p class="small text-muted mb-2">2nd year Civil Engineering student</p>
+                                        <p class="small">Abhishek is interested in façade design and green infrastructure. He has hands-on experience in the windows and façade business in Bagalkot and contributes to Bhooswarga with collaborative sustainability initiatives.</p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <i class="fas fa-award fa-3x text-success mb-3"></i>
-                        <h5>Quality Assured</h5>
-                        <p class="small">ISO 9001:2015 Certified</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <i class="fas fa-globe fa-3x text-success mb-3"></i>
-                        <h5>Eco Friendly</h5>
-                        <p class="small">Sustainable farming methods</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <i class="fas fa-heart fa-3x text-success mb-3"></i>
-                        <h5>Customer Choice</h5>
-                        <p class="small">5-star rated service</p>
-                    </div>
-                </div>
-            </div>
+
         </div>
     </section>
 </div>
+
+<script>
+function setupImageUpload(inputId, imgId) {
+    const input = document.getElementById(inputId);
+    const img = document.getElementById(imgId);
+    if (!input || !img) return;
+
+    input.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    setupImageUpload('dr-sumaraj-upload', 'dr-sumaraj-photo');
+});
+</script>
+
 {% endblock %}

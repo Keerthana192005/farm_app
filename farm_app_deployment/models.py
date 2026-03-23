@@ -1,23 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin
 from datetime import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
-
-class Admin(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
-    
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-    
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-    
-    def __repr__(self):
-        return f'<Admin {self.username}>'
 
 class Vegetable(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -46,14 +30,8 @@ class Order(db.Model):
     customer_name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(20), nullable=False)
     address = db.Column(db.Text, nullable=False)
-    email = db.Column(db.String(120), nullable=True)
     total = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default='pending')
-    payment_method = db.Column(db.String(50), nullable=True)
-    payment_status = db.Column(db.String(20), default='pending')
-    payment_id = db.Column(db.String(100), nullable=True)
-    delivery_time = db.Column(db.String(50), nullable=True)
-    order_notes = db.Column(db.Text, nullable=True)
     date = db.Column(db.DateTime, default=datetime.utcnow)
     
     order_items = db.relationship('OrderItem', backref='order', lazy=True, cascade='all, delete-orphan')
