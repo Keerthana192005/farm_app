@@ -642,9 +642,11 @@ def update_order_status(order_id):
     flash(f'Order {order_id} marked as completed!', 'success')
     return redirect(url_for('admin_dashboard'))
 
-# Make the function available at module level
-def create_tables_and_seed(app_instance):
-    with app_instance.app_context():
+@app.before_first_request
+def initialize_database():
+    """Initialize database tables and seed data on first request"""
+    try:
+        # Create tables
         db.create_all()
         
         # Create default admin if not exists
@@ -675,8 +677,17 @@ def create_tables_and_seed(app_instance):
                 db.session.add(vegetable)
             
             db.session.commit()
-            print("Database seeded with sample vegetables!")
+            print("Database seeded with initial vegetable data")
+            
+    except Exception as e:
+        print(f"Database initialization error: {e}")
+        db.session.rollback()
+
+# Make the function available at module level for backward compatibility
+def create_tables_and_seed(app_instance):
+    with app_instance.app_context():
+        initialize_database()
 
 if __name__ == '__main__':
-    create_tables_and_seed()
+    create_tables_and_seed(app)
     app.run(debug=True, host='127.0.0.1', port=8080)
