@@ -643,8 +643,8 @@ def update_order_status(order_id):
     return redirect(url_for('admin_dashboard'))
 
 # Make the function available at module level
-def create_tables_and_seed():
-    with app.app_context():
+def create_tables_and_seed(app_instance):
+    with app_instance.app_context():
         db.create_all()
         
         # Create default admin if not exists
