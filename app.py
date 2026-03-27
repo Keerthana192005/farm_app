@@ -17,14 +17,6 @@ def create_app(config_name=None):
     
     db.init_app(app)
     
-    # Initialize database tables after app context is available
-    with app.app_context():
-        try:
-            db.create_all()
-            print("Database tables created successfully")
-        except Exception as e:
-            print(f"Error creating database tables: {e}")
-    
     return app
 
 # Create app instance first
@@ -641,6 +633,37 @@ def admin_customers():
 def admin_settings():
     return render_template('admin_settings.html')
 
+@app.route('/setup')
+def setup_database():
+    """Simple database setup route"""
+    try:
+        # Create tables
+        db.create_all()
+        
+        # Create admin if not exists
+        if Admin.query.count() == 0:
+            admin = Admin(username='admin')
+            admin.set_password('admin123')
+            db.session.add(admin)
+            db.session.commit()
+        
+        # Add vegetables if empty
+        if Vegetable.query.count() == 0:
+            vegetables = [
+                Vegetable(name='Tomatoes', price=40.0, stock=50, description='Fresh red tomatoes'),
+                Vegetable(name='Potatoes', price=30.0, stock=100, description='High quality potatoes'),
+                Vegetable(name='Onions', price=35.0, stock=75, description='Fresh onions'),
+                Vegetable(name='Carrots', price=45.0, stock=60, description='Sweet carrots'),
+                Vegetable(name='Spinach', price=25.0, stock=40, description='Fresh spinach'),
+            ]
+            for veg in vegetables:
+                db.session.add(veg)
+            db.session.commit()
+        
+        return "Database setup complete! Admin: admin/admin123"
+    except Exception as e:
+        return f"Error: {str(e)}"
+
 @app.route('/admin/update_order_status/<int:order_id>')
 @login_required
 def update_order_status(order_id):
@@ -650,92 +673,5 @@ def update_order_status(order_id):
     flash(f'Order {order_id} marked as completed!', 'success')
     return redirect(url_for('admin_dashboard'))
 
-@app.route('/init-db')
-def init_database():
-    """Initialize database with seed data - run this once after deployment"""
-    try:
-        # Create default admin if not exists
-        if Admin.query.count() == 0:
-            default_admin = Admin(username='admin')
-            default_admin.set_password('admin123')
-            db.session.add(default_admin)
-            db.session.commit()
-            print("Default admin account created: username='admin', password='admin123'")
-        
-        # Seed data if database is empty
-        if Vegetable.query.count() == 0:
-            seed_data = [
-                {'name': 'Tomatoes', 'price': 40.0, 'stock': 50, 'description': 'Fresh red tomatoes from our farm'},
-                {'name': 'Potatoes', 'price': 30.0, 'stock': 100, 'description': 'High quality potatoes'},
-                {'name': 'Onions', 'price': 35.0, 'stock': 75, 'description': 'Fresh onions'},
-                {'name': 'Carrots', 'price': 45.0, 'stock': 60, 'description': 'Sweet and crunchy carrots'},
-                {'name': 'Spinach', 'price': 25.0, 'stock': 40, 'description': 'Fresh green spinach'},
-                {'name': 'Broccoli', 'price': 60.0, 'stock': 30, 'description': 'Organic broccoli'},
-                {'name': 'Bell Peppers', 'price': 55.0, 'stock': 45, 'description': 'Colorful bell peppers'},
-                {'name': 'Cucumbers', 'price': 35.0, 'stock': 55, 'description': 'Fresh cucumbers'},
-                {'name': 'Cabbage', 'price': 28.0, 'stock': 35, 'description': 'Green cabbage'},
-                {'name': 'Cauliflower', 'price': 50.0, 'stock': 25, 'description': 'Fresh cauliflower'}
-            ]
-            
-            for data in seed_data:
-                vegetable = Vegetable(**data)
-                db.session.add(vegetable)
-            
-            db.session.commit()
-            print("Database seeded with initial vegetable data")
-        
-        return "Database initialized successfully! Admin: admin/admin123"
-        
-    except Exception as e:
-        print(f"Database initialization error: {e}")
-        db.session.rollback()
-        return f"Error initializing database: {e}"
-
-def initialize_database():
-    """Initialize database tables and seed data"""
-    try:
-        # Create tables
-        db.create_all()
-        
-        # Create default admin if not exists
-        if Admin.query.count() == 0:
-            default_admin = Admin(username='admin')
-            default_admin.set_password('admin123')
-            db.session.add(default_admin)
-            db.session.commit()
-            print("Default admin account created: username='admin', password='admin123'")
-        
-        # Seed data if database is empty
-        if Vegetable.query.count() == 0:
-            seed_data = [
-                {'name': 'Tomatoes', 'price': 40.0, 'stock': 50, 'description': 'Fresh red tomatoes from our farm'},
-                {'name': 'Potatoes', 'price': 30.0, 'stock': 100, 'description': 'High quality potatoes'},
-                {'name': 'Onions', 'price': 35.0, 'stock': 75, 'description': 'Fresh onions'},
-                {'name': 'Carrots', 'price': 45.0, 'stock': 60, 'description': 'Sweet and crunchy carrots'},
-                {'name': 'Spinach', 'price': 25.0, 'stock': 40, 'description': 'Fresh green spinach'},
-                {'name': 'Broccoli', 'price': 60.0, 'stock': 30, 'description': 'Organic broccoli'},
-                {'name': 'Bell Peppers', 'price': 55.0, 'stock': 45, 'description': 'Colorful bell peppers'},
-                {'name': 'Cucumbers', 'price': 35.0, 'stock': 55, 'description': 'Fresh cucumbers'},
-                {'name': 'Cabbage', 'price': 28.0, 'stock': 35, 'description': 'Green cabbage'},
-                {'name': 'Cauliflower', 'price': 50.0, 'stock': 25, 'description': 'Fresh cauliflower'}
-            ]
-            
-            for data in seed_data:
-                vegetable = Vegetable(**data)
-                db.session.add(vegetable)
-            
-            db.session.commit()
-            print("Database seeded with initial vegetable data")
-            
-    except Exception as e:
-        print(f"Database initialization error: {e}")
-        db.session.rollback()
-
-# Make the function available at module level for backward compatibility
-def create_tables_and_seed(app_instance):
-    with app_instance.app_context():
-        initialize_database()
-
 if __name__ == '__main__':
-    create_tables_and_seed(app)
     app.run(debug=True, host='127.0.0.1', port=8080)
