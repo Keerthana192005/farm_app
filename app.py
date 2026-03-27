@@ -93,8 +93,18 @@ def create_app(config_name=None):
     def api_vegetables():
         try:
             vegetables = Vegetable.query.all()
-            return jsonify([veg.to_dict() for veg in vegetables])
-        except:
+            result = []
+            for veg in vegetables:
+                result.append({
+                    'id': veg.id,
+                    'name': veg.name,
+                    'price': veg.price,
+                    'stock': veg.stock,
+                    'image': veg.image,
+                    'description': veg.description
+                })
+            return jsonify(result)
+        except Exception as e:
             return jsonify([])
 
     @app.route('/api/cart-count')
