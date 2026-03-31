@@ -17,10 +17,60 @@ def create_app(config_name=None):
     
     db.init_app(app)
     
+    # Ensure upload folder exists
+    try:
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    except Exception as e:
+        print(f"Could not create upload folder: {e}")
+    
     return app
 
 # Create app instance first
 app = create_app()
+
+# Initialize database and seed data on startup
+def _initialize_db_on_import():
+    """Initialize database when app is imported (for Render/Gunicorn)"""
+    with app.app_context():
+        try:
+            db.create_all()
+            
+            # Create default admin if not exists
+            if Admin.query.count() == 0:
+                default_admin = Admin(username='admin')
+                default_admin.set_password('admin123')
+                db.session.add(default_admin)
+                db.session.commit()
+                print("✅ Default admin account created: username='admin', password='admin123'")
+            
+            # Seed vegetables if empty
+            if Vegetable.query.count() == 0:
+                seed_data = [
+                    {'name': 'Tomatoes', 'price': 40.0, 'stock': 50, 'description': 'Fresh red tomatoes from our farm'},
+                    {'name': 'Potatoes', 'price': 30.0, 'stock': 100, 'description': 'High quality potatoes'},
+                    {'name': 'Onions', 'price': 35.0, 'stock': 75, 'description': 'Fresh onions'},
+                    {'name': 'Carrots', 'price': 45.0, 'stock': 60, 'description': 'Sweet and crunchy carrots'},
+                    {'name': 'Spinach', 'price': 25.0, 'stock': 40, 'description': 'Fresh green spinach'},
+                    {'name': 'Broccoli', 'price': 60.0, 'stock': 30, 'description': 'Organic broccoli'},
+                    {'name': 'Bell Peppers', 'price': 55.0, 'stock': 45, 'description': 'Colorful bell peppers'},
+                    {'name': 'Cucumbers', 'price': 35.0, 'stock': 55, 'description': 'Fresh cucumbers'},
+                    {'name': 'Cabbage', 'price': 28.0, 'stock': 35, 'description': 'Green cabbage'},
+                    {'name': 'Cauliflower', 'price': 50.0, 'stock': 25, 'description': 'Fresh cauliflower'}
+                ]
+                
+                for data in seed_data:
+                    vegetable = Vegetable(**data)
+                    db.session.add(vegetable)
+                
+                db.session.commit()
+                print("✅ Database seeded with 10 sample vegetables")
+            
+            print("✅ Database initialization complete")
+        except Exception as e:
+            print(f"⚠️ Database initialization error: {e}")
+
+# Call initialization immediately on import
+_initialize_db_on_import()
 
 # Now define all routes using the created app
 login_manager = LoginManager()
