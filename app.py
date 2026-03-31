@@ -615,28 +615,34 @@ def delete_product(veg_id):
 @app.route('/admin/update_order_status/<int:order_id>')
 @login_required
 def update_order_status(order_id):
-    order = Order.query.get_or_404(order_id)
-    
-    # Only reduce stock if order was pending (not already completed)
-    if order.status == 'pending':
-        # Reduce stock for each item in the order
-        for item in order.items:
-            vegetable = Vegetable.query.get(item.vegetable_id)
-            if vegetable:
-                # Convert quantity string to float and reduce stock
-                quantity = float(item.quantity)
-                vegetable.stock -= quantity
-                
-                # Ensure stock doesn't go negative
-                if vegetable.stock < 0:
-                    vegetable.stock = 0
+    try:
+        order = Order.query.get_or_404(order_id)
         
-        flash(f'Order {order_id} marked as completed and stock updated!', 'success')
-    else:
-        flash(f'Order {order_id} already completed!', 'warning')
+        # Only reduce stock if order was pending (not already completed)
+        if order.status == 'pending':
+            # Reduce stock for each item in the order
+            for item in order.order_items:
+                vegetable = Vegetable.query.get(item.vegetable_id)
+                if vegetable:
+                    # item.quantity is already an integer
+                    quantity = item.quantity
+                    vegetable.stock -= quantity
+                    
+                    # Ensure stock doesn't go negative
+                    if vegetable.stock < 0:
+                        vegetable.stock = 0
+            
+            order.status = 'completed'
+            db.session.commit()
+            flash(f'Order #{order_id} marked as completed and stock updated!', 'success')
+        else:
+            flash(f'Order #{order_id} already completed!', 'warning')
     
-    order.status = 'completed'
-    db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error updating order: {str(e)}', 'danger')
+        print(f"Error updating order {order_id}: {e}")
+    
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/reports')
