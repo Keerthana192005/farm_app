@@ -544,6 +544,103 @@ def update_order_status(order_id):
     flash(f'Order {order_id} marked as completed!', 'success')
     return redirect(url_for('admin_dashboard'))
 
+@app.route('/admin/reports')
+@login_required
+def admin_reports():
+    try:
+        orders = Order.query.order_by(Order.date.desc()).all()
+        total_orders = Order.query.count()
+        completed_orders = Order.query.filter_by(status='completed').count()
+        pending_orders = Order.query.filter_by(status='pending').count()
+        total_revenue = sum(order.total for order in orders)
+    except Exception as e:
+        print(f"Database error: {e}")
+        orders = []
+        total_orders = 0
+        completed_orders = 0
+        pending_orders = 0
+        total_revenue = 0
+    
+    return render_template('admin_reports.html', 
+                         orders=orders,
+                         total_orders=total_orders,
+                         completed_orders=completed_orders,
+                         pending_orders=pending_orders,
+                         total_revenue=total_revenue)
+
+@app.route('/admin/customers')
+@login_required
+def admin_customers():
+    try:
+        orders = Order.query.order_by(Order.date.desc()).all()
+        customers = {}
+        for order in orders:
+            if order.customer_name not in customers:
+                customers[order.customer_name] = {
+                    'name': order.customer_name,
+                    'phone': order.phone,
+                    'email': order.email,
+                    'address': order.address,
+                    'total_orders': 0,
+                    'total_spent': 0
+                }
+            customers[order.customer_name]['total_orders'] += 1
+            customers[order.customer_name]['total_spent'] += order.total
+        
+        customer_list = list(customers.values())
+    except Exception as e:
+        print(f"Database error: {e}")
+        customer_list = []
+    
+    return render_template('admin_customers.html', customers=customer_list)
+
+@app.route('/admin/images')
+@login_required
+def admin_images():
+    images = {
+        'bhooswarga': 'bhooswarga_garden.png',
+        'dr_sumaraj': 'dr_sumaraj.png',
+        'byre_gowda': 'byre_gowda.png',
+        'vishwadeep_k': 'vishwadeep_k.jpg',
+        'abhishek_r': 'abhishek_r.jpg'
+    }
+    return render_template('admin_images.html', images=images)
+
+@app.route('/admin/upload_image', methods=['POST'])
+@login_required
+def upload_image():
+    target = request.form.get('target')
+    file = request.files.get('image')
+
+    allowed_targets = {
+        'bhooswarga': 'bhooswarga_garden.png',
+        'dr_sumaraj': 'dr_sumaraj.png',
+        'byre_gowda': 'byre_gowda.png',
+        'vishwadeep_k': 'vishwadeep_k.jpg',
+        'abhishek_r': 'abhishek_r.jpg'
+    }
+
+    if target not in allowed_targets:
+        flash('Invalid image target.', 'error')
+        return redirect(url_for('admin_images'))
+
+    if not file or file.filename == '':
+        flash('No image selected.', 'error')
+        return redirect(url_for('admin_images'))
+
+    filename = secure_filename(file.filename)
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in {'.png', '.jpg', '.jpeg', '.gif'}:
+        flash('Unsupported image format. Use PNG/JPG/GIF.', 'error')
+        return redirect(url_for('admin_images'))
+
+    save_name = allowed_targets[target]
+    save_path = os.path.join(app.config['UPLOAD_FOLDER'], save_name)
+    file.save(save_path)
+
+    flash(f'Updated image for {target}.', 'success')
+    return redirect(url_for('admin_images'))
+
 # Make the function available at module level
 def create_tables_and_seed():
     with app.app_context():
@@ -578,6 +675,214 @@ def create_tables_and_seed():
             
             db.session.commit()
             print("Database seeded with sample vegetables!")
+
+# ==================== CUSTOMER FEATURES ====================
+
+# Advanced Search & Filter API
+@app.route('/api/search')
+def api_search():
+    query = request.args.get('q', '').lower()
+    sort_by = request.args.get('sort', 'name')
+    price_min = request.args.get('price_min', type=float)
+    price_max = request.args.get('price_max', type=float)
+    
+    vegetables = Vegetable.query.filter(Vegetable.stock > 0)
+    
+    # Apply search filter
+    if query:
+        vegetables = vegetables.filter(Vegetable.name.ilike(f'%{query}%'))
+    
+    # Apply price filter
+    if price_min is not None:
+        vegetables = vegetables.filter(Vegetable.price >= price_min)
+    if price_max is not None:
+        vegetables = vegetables.filter(Vegetable.price <= price_max)
+    
+    # Apply sorting
+    if sort_by == 'price_low':
+        vegetables = vegetables.order_by(Vegetable.price.asc())
+    elif sort_by == 'price_high':
+        vegetables = vegetables.order_by(Vegetable.price.desc())
+    else:
+        vegetables = vegetables.order_by(Vegetable.name.asc())
+    
+    return jsonify({
+        'vegetables': [veg.to_dict() for veg in vegetables.all()]
+    })
+
+# ==================== ADMIN ANALYTICS ====================
+
+@app.route('/admin/analytics')
+@login_required
+def admin_analytics():
+    """Advanced analytics dashboard"""
+    try:
+        import json
+        from datetime import datetime, timedelta
+        
+        # Sales Analytics
+        orders = Order.query.all()
+        
+        # Calculate key metrics
+        total_revenue = sum(order.total for order in orders)
+        total_orders = len(orders)
+        completed_orders = len([o for o in orders if o.status == 'completed'])
+        pending_orders = len([o for o in orders if o.status == 'pending'])
+        
+        # Payment method breakdown
+        payment_methods = {}
+        for order in orders:
+            method = order.payment_method or 'cod'
+            payment_methods[method] = payment_methods.get(method, 0) + 1
+        
+        # Best selling products
+        product_sales = {}
+        for order in orders:
+            for item in order.order_items:
+                if item.vegetable.name not in product_sales:
+                    product_sales[item.vegetable.name] = {'qty': 0, 'revenue': 0}
+                product_sales[item.vegetable.name]['qty'] += item.quantity
+                product_sales[item.vegetable.name]['revenue'] += item.price * item.quantity
+        
+        sorted_products = sorted(product_sales.items(), key=lambda x: x[1]['revenue'], reverse=True)[:5]
+        
+        # Customer Analytics
+        customers = {}
+        for order in orders:
+            key = order.phone
+            if key not in customers:
+                customers[key] = {
+                    'name': order.customer_name,
+                    'phone': order.phone,
+                    'email': order.email,
+                    'orders': 0,
+                    'total_spent': 0,
+                    'first_order': order.date
+                }
+            customers[key]['orders'] += 1
+            customers[key]['total_spent'] += order.total
+            customers[key]['last_order'] = order.date
+        
+        repeat_customers = len([c for c in customers.values() if c['orders'] > 1])
+        
+        # Daily revenue (last 30 days)
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        recent_orders = [o for o in orders if o.date >= thirty_days_ago]
+        
+        daily_revenue = {}
+        for order in recent_orders:
+            date_key = order.date.strftime('%Y-%m-%d')
+            daily_revenue[date_key] = daily_revenue.get(date_key, 0) + order.total
+        
+        # Stock status
+        vegetables = Vegetable.query.all()
+        low_stock = [v for v in vegetables if v.stock < 20]
+        out_of_stock = [v for v in vegetables if v.stock == 0]
+        
+        analytics = {
+            'total_revenue': total_revenue,
+            'total_orders': total_orders,
+            'completed_orders': completed_orders,
+            'pending_orders': pending_orders,
+            'repeat_customers': repeat_customers,
+            'total_customers': len(customers),
+            'avg_order_value': total_revenue / total_orders if total_orders > 0 else 0,
+            'payment_methods': payment_methods,
+            'top_products': sorted_products,
+            'low_stock_items': len(low_stock),
+            'out_of_stock_items': len(out_of_stock),
+            'daily_revenue': daily_revenue
+        }
+        
+    except Exception as e:
+        flash(f'Error loading analytics: {e}', 'error')
+        analytics = {}
+    
+    return render_template('admin_analytics.html', analytics=analytics)
+
+@app.route('/admin/api/sales-chart')
+@login_required
+def api_sales_chart():
+    """API endpoint for sales chart data"""
+    try:
+        from datetime import datetime, timedelta
+        
+        # Get daily data for last 30 days
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        orders = Order.query.filter(Order.date >= thirty_days_ago).all()
+        
+        daily_data = {}
+        for order in orders:
+            date_key = order.date.strftime('%Y-%m-%d')
+            if date_key not in daily_data:
+                daily_data[date_key] = {'orders': 0, 'revenue': 0}
+            daily_data[date_key]['orders'] += 1
+            daily_data[date_key]['revenue'] += order.total
+        
+        # Fill missing dates with 0
+        current_date = datetime.utcnow().date() - timedelta(days=30)
+        while current_date <= datetime.utcnow().date():
+            date_key = current_date.strftime('%Y-%m-%d')
+            if date_key not in daily_data:
+                daily_data[date_key] = {'orders': 0, 'revenue': 0}
+            current_date += timedelta(days=1)
+        
+        return jsonify({
+            'dates': sorted(daily_data.keys()),
+            'orders': [daily_data[d]['orders'] for d in sorted(daily_data.keys())],
+            'revenue': [daily_data[d]['revenue'] for d in sorted(daily_data.keys())]
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/admin/api/product-chart')
+@login_required
+def api_product_chart():
+    """API endpoint for product sales chart"""
+    try:
+        orders = Order.query.all()
+        product_sales = {}
+        
+        for order in orders:
+            for item in order.order_items:
+                name = item.vegetable.name
+                if name not in product_sales:
+                    product_sales[name] = 0
+                product_sales[name] += item.quantity
+        
+        sorted_products = sorted(product_sales.items(), key=lambda x: x[1], reverse=True)[:10]
+        
+        return jsonify({
+            'products': [p[0] for p in sorted_products],
+            'quantities': [p[1] for p in sorted_products]
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/admin/inventory-management')
+@login_required
+def inventory_management():
+    """Inventory management with stock awareness"""
+    try:
+        vegetables = Vegetable.query.all()
+        
+        # Categorize items
+        in_stock = [v for v in vegetables if v.stock > 20]
+        low_stock = [v for v in vegetables if 0 < v.stock <= 20]
+        out_of_stock = [v for v in vegetables if v.stock == 0]
+        
+        inventory_data = {
+            'in_stock': in_stock,
+            'low_stock': low_stock,
+            'out_of_stock': out_of_stock,
+            'total_items': len(vegetables),
+            'alert_items': len(low_stock) + len(out_of_stock)
+        }
+    except Exception as e:
+        flash(f'Error loading inventory: {e}', 'error')
+        inventory_data = {'in_stock': [], 'low_stock': [], 'out_of_stock': []}
+    
+    return render_template('admin_inventory.html', inventory=inventory_data)
 
 if __name__ == '__main__':
     create_tables_and_seed()
