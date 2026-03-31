@@ -17,13 +17,6 @@ def create_app(config_name=None):
     
     db.init_app(app)
     
-    # Initialize database with app context
-    with app.app_context():
-        try:
-            db.create_all()
-        except Exception as e:
-            print(f"Database initialization deferred: {e}")
-    
     return app
 
 # Create app instance first
@@ -38,8 +31,25 @@ login_manager.login_view = 'admin_login'
 def load_user(user_id):
     return Admin.query.get(int(user_id))
 
+# Database initialization flag
+_db_initialized = False
+
+def ensure_db_initialized():
+    """Initialize database tables if not already done"""
+    global _db_initialized
+    if _db_initialized:
+        return
+    
+    try:
+        with app.app_context():
+            db.create_all()
+            _db_initialized = True
+    except Exception as e:
+        print(f"Database initialization error: {e}")
+
 @app.route('/')
 def home():
+    ensure_db_initialized()
     vegetables = Vegetable.query.filter(Vegetable.stock > 0).all()
     return render_template('home.html', vegetables=vegetables)
 
@@ -387,6 +397,8 @@ def order_confirmation(order_id):
 # Admin routes
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
+    ensure_db_initialized()
+    
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
