@@ -116,6 +116,7 @@
                                 <h5 class="mb-3 text-capitalize">{{ key.replace('_', ' ') }}</h5>
                                 <img src="{{ url_for('static', filename='uploads/' ~ filename) }}" alt="{{ key }}" class="image-preview" onerror="this.src='https://via.placeholder.com/600x400?text=No+Image'" />
                                 <form method="POST" action="{{ url_for('upload_image') }}" enctype="multipart/form-data">
+                                    {{ csrf_token() }}
                                     <input type="hidden" name="target" value="{{ key }}" />
                                     <div class="mb-3">
                                         <label class="form-label">Choose a new image</label>

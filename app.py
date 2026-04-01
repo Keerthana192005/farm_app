@@ -1,9 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from models import db, Vegetable, Order, OrderItem, Feedback, Admin, Notification
 from config import config
 from utils import generate_payment_qr_code
@@ -15,7 +18,21 @@ def create_app(config_name=None):
     config_name = config_name or os.environ.get('FLASK_ENV', 'development')
     app.config.from_object(config[config_name])
     
+    # Add secret key for CSRF protection (use from config or generate)
+    if 'SECRET_KEY' not in app.config:
+        app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'
+    
+    # Initialize extensions
     db.init_app(app)
+    csrf = CSRFProtect(app)
+    
+    # Initialize rate limiter
+    limiter = Limiter(
+        app=app,
+        key_func=get_remote_address,
+        default_limits=["200 per day", "50 per hour"],
+        storage_uri="memory://"
+    )
     
     # Ensure upload folder exists
     try:
@@ -23,10 +40,10 @@ def create_app(config_name=None):
     except Exception as e:
         print(f"Could not create upload folder: {e}")
     
-    return app
+    return app, csrf, limiter
 
 # Create app instance first
-app = create_app()
+app, csrf, limiter = create_app()
 
 # Initialize database and seed data on startup
 def _initialize_db_on_import():
@@ -465,21 +482,47 @@ def order_confirmation(order_id):
 
 # Admin routes
 @app.route('/admin/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def admin_login():
     ensure_db_initialized()
     
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        
+        # Track failed login attempts in session
+        failed_attempts = session.get('failed_login_attempts', 0)
+        
+        # Lock account temporarily after 5 failed attempts
+        if failed_attempts >= 5:
+            flash('Too many login attempts. Please try again in 15 minutes.', 'error')
+            return render_template('admin_login.html')
+        
+        # Validate inputs
+        if not username or not password:
+            flash('Please enter both username and password!', 'error')
+            return render_template('admin_login.html')
         
         admin = Admin.query.filter_by(username=username).first()
         
         if admin and admin.check_password(password):
-            login_user(admin)
+            # Clear failed attempts on successful login
+            session.pop('failed_login_attempts', None)
+            session.permanent = True
+            app.permanent_session_lifetime = timedelta(hours=24)
+            login_user(admin, remember=True)
             flash('Login successful!', 'success')
             return redirect(url_for('admin_dashboard'))
         else:
-            flash('Invalid credentials!', 'error')
+            # Increment failed attempts
+            failed_attempts += 1
+            session['failed_login_attempts'] = failed_attempts
+            
+            # Generic error message for security (don't reveal if username exists)
+            if failed_attempts >= 5:
+                flash('Too many failed attempts. Please try again later.', 'error')
+            else:
+                flash('Invalid username or password!', 'error')
     
     return render_template('admin_login.html')
 
@@ -625,10 +668,23 @@ def edit_product(veg_id):
 @app.route('/admin/delete_product/<int:veg_id>')
 @login_required
 def delete_product(veg_id):
-    vegetable = Vegetable.query.get_or_404(veg_id)
-    db.session.delete(vegetable)
-    db.session.commit()
-    flash(f'{vegetable.name} deleted successfully!', 'success')
+    try:
+        vegetable = Vegetable.query.get_or_404(veg_id)
+        vegetable_name = vegetable.name
+        
+        # Delete all order items associated with this vegetable
+        OrderItem.query.filter_by(vegetable_id=veg_id).delete()
+        
+        # Delete the vegetable
+        db.session.delete(vegetable)
+        db.session.commit()
+        
+        flash(f'{vegetable_name} deleted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        print(f"Delete error: {str(e)}")
+        flash(f'Error deleting product: {str(e)}', 'danger')
+    
     return redirect(url_for('admin_products'))
 
 @app.route('/admin/update_order_status/<int:order_id>')

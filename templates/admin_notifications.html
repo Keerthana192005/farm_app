@@ -141,6 +141,7 @@
                                 <div class="notification-message">{{ notification.message }}</div>
                                 <div class="notification-date"><i class="fas fa-clock"></i> {{ notification.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
                                 <form method="POST" action="{{ url_for('mark_notification_read', notification_id=notification.id) }}" style="display: inline;">
+                                    {{ csrf_token() }}
                                     <button type="submit" class="btn btn-sm btn-primary mt-2">
                                         <i class="fas fa-check"></i> Mark as Read
                                     </button>
