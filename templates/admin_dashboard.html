@@ -91,12 +91,7 @@
                         <a href="{{ url_for('admin_customers') }}" class="nav-link">
                             <i class="fas fa-users"></i> Customers
                         </a>
-                        <a href="{{ url_for('admin_notifications') }}" class="nav-link">
-                            <i class="fas fa-bell"></i> Notifications
-                            {% if unread_count > 0 %}
-                                <span class="badge bg-danger ms-2">{{ unread_count }}</span>
-                            {% endif %}
-                        </a>
+
                         <hr>
                         <a href="#" data-bs-toggle="modal" data-bs-target="#changeUsernameModal" class="nav-link">
                             <i class="fas fa-user-edit"></i> Change Username
@@ -271,27 +266,100 @@
                         </div>
                     </div>
 
-                    <!-- Recent Feedback -->
+                    <!-- All Notifications Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0"><i class="fas fa-bell"></i> All Notifications ({{ notifications|length }})</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if notifications %}
+                                        {% set unread = notifications|selectattr('is_read', 'equalto', False)|list %}
+                                        {% if unread %}
+                                        <div class="mb-4">
+                                            <h6 class="text-warning mb-3"><i class="fas fa-exclamation-circle"></i> Unread ({{ unread|length }})</h6>
+                                            {% for notification in unread %}
+                                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <h6 class="alert-heading mb-1">{{ notification.title }}</h6>
+                                                        <p class="mb-1">{{ notification.message }}</p>
+                                                        <small class="text-muted"><i class="fas fa-clock"></i> {{ notification.created_at.strftime('%d-%m-%Y %H:%M:%S') }}</small>
+                                                    </div>
+                                                    <form method="POST" action="{{ url_for('mark_notification_read', notification_id=notification.id) }}" style="display: inline;">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                        <button type="submit" class="btn btn-sm btn-primary ms-2">
+                                                            <i class="fas fa-check"></i> Mark as Read
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+
+                                        {% set read = notifications|selectattr('is_read', 'equalto', True)|list %}
+                                        {% if read %}
+                                        <hr>
+                                        <div>
+                                            <h6 class="text-muted mb-3"><i class="fas fa-check-double"></i> Read ({{ read|length }})</h6>
+                                            {% for notification in read[:5] %}
+                                            <div class="alert alert-light border-left" role="alert">
+                                                <h6 class="alert-heading mb-1">{{ notification.title }}</h6>
+                                                <p class="mb-1 small">{{ notification.message }}</p>
+                                                <small class="text-muted"><i class="fas fa-clock"></i> {{ notification.created_at.strftime('%d-%m-%Y %H:%M:%S') }}</small>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    {% else %}
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> No notifications yet.
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Feedback with Ratings -->
                     <div class="row mb-4">
                         <div class="col-12">
                             <div class="card">
                                 <div class="card-header bg-success text-white">
-                                    <h5 class="mb-0">Recent Customer Feedback</h5>
+                                    <h5 class="mb-0"><i class="fas fa-comments"></i> Recent Customer Feedback (Total: {{ feedbacks|length }})</h5>
                                 </div>
                                 <div class="card-body">
+                                    {% if feedbacks %}
                                     <div class="row">
-                                        {% for feedback in feedbacks[:6] %}
-                                        <div class="col-md-6 mb-3">
-                                            <div class="p-3 border rounded">
+                                        {% for feedback in feedbacks[:9] %}
+                                        <div class="col-md-4 mb-3">
+                                            <div class="p-3 border rounded h-100">
                                                 <h6 class="mb-2">{{ feedback.name }}</h6>
-                                                <p class="small text-muted mb-2">
+                                                <div class="mb-2">
+                                                    {% for i in range(1, 6) %}
+                                                        {% if i <= feedback.rating %}
+                                                            <i class="fas fa-star text-warning"></i>
+                                                        {% else %}
+                                                            <i class="far fa-star text-muted"></i>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                    <small class="text-muted">({{ feedback.rating }}/5)</small>
+                                                </div>
+                                                <p class="small mb-2">{{ feedback.message[:120] }}{% if feedback.message|length > 120 %}...{% endif %}</p>
+                                                <small class="text-muted d-block">
                                                     <i class="fas fa-calendar"></i> {{ feedback.date.strftime('%d-%m-%Y %H:%M') }}
-                                                </p>
-                                                <p class="small mb-0">{{ feedback.message[:150] }}{% if feedback.message|length > 150 %}...{% endif %}</p>
+                                                </small>
                                             </div>
                                         </div>
                                         {% endfor %}
                                     </div>
+                                    {% else %}
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> No feedback yet.
+                                    </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>

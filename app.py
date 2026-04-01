@@ -836,17 +836,6 @@ def upload_image():
     flash(f'Updated image for {target}.', 'success')
     return redirect(url_for('admin_images'))
 
-@app.route('/admin/notifications')
-@login_required
-def admin_notifications():
-    """View all notifications"""
-    try:
-        notifications = Notification.query.order_by(Notification.created_at.desc()).all()
-    except Exception as e:
-        notifications = []
-    
-    return render_template('admin_notifications.html', notifications=notifications)
-
 @app.route('/admin/mark_notification_read/<int:notification_id>', methods=['POST'])
 @login_required
 def mark_notification_read(notification_id):
@@ -859,7 +848,7 @@ def mark_notification_read(notification_id):
     except Exception as e:
         flash(f'Error updating notification: {e}', 'error')
     
-    return redirect(request.referrer or url_for('admin_notifications'))
+    return redirect(url_for('admin_dashboard'))
 
 # Make the function available at module level
 def create_tables_and_seed():
