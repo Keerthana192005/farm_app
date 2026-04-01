@@ -243,17 +243,35 @@
                                                     <td>{{ order.phone }}</td>
                                                     <td><strong>₹{{ "%.2f"|format(order.total) }}</strong></td>
                                                     <td>
-                                                        <span class="order-status badge {% if order.status == 'completed' %}bg-success{% else %}bg-warning{% endif %}">
-                                                            {{ order.status.title() }}
-                                                        </span>
+                                                        {% if order.status == 'pending' %}
+                                                            <span class="order-status badge bg-danger">
+                                                                <i class="fas fa-clock"></i> Awaiting Payment
+                                                            </span>
+                                                        {% elif order.status == 'confirmed' %}
+                                                            <span class="order-status badge bg-warning">
+                                                                <i class="fas fa-check-circle"></i> Paid - Ready to Fulfill
+                                                            </span>
+                                                        {% elif order.status == 'completed' %}
+                                                            <span class="order-status badge bg-success">
+                                                                <i class="fas fa-check-double"></i> Fulfilled
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="order-status badge bg-secondary">
+                                                                {{ order.status.title() }}
+                                                            </span>
+                                                        {% endif %}
                                                     </td>
                                                     <td>
-                                                        {% if order.status == 'pending' %}
+                                                        {% if order.status == 'confirmed' %}
                                                         <a href="{{ url_for('update_order_status', order_id=order.id) }}" 
                                                            class="btn btn-sm btn-success"
-                                                           onclick="return confirm('Mark this order as completed?')">
-                                                            <i class="fas fa-check"></i>
+                                                           onclick="return confirm('Mark this order as fulfilled?')">
+                                                            <i class="fas fa-check"></i> Fulfill
                                                         </a>
+                                                        {% elif order.status == 'completed' %}
+                                                        <span class="text-muted small">Completed</span>
+                                                        {% else %}
+                                                        <span class="text-muted small">Pending</span>
                                                         {% endif %}
                                                     </td>
                                                 </tr>

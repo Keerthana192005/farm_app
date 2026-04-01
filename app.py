@@ -338,11 +338,14 @@ def checkout():
             session['temp_cart'] = cart_items  # Store for recovery if needed
             return redirect(url_for('qr_payment', order_id=order.id))
         elif payment_method == 'cod':
-            # For COD, update stock immediately
+            # For COD, update stock immediately and mark order as confirmed
             for veg_id, item in cart_items.items():
                 vegetable = Vegetable.query.get(int(veg_id))
                 if vegetable:
                     vegetable.stock -= item['quantity']
+            
+            # Mark order as confirmed for COD
+            order.status = 'confirmed'
             db.session.commit()
             
             # Clear cart BEFORE redirect to ensure it's cleared
@@ -574,8 +577,9 @@ def admin_dashboard():
         # Get fresh data from database - no caching
         orders = Order.query.order_by(Order.date.desc()).all()
         total_orders = Order.query.count()
-        pending_orders = Order.query.filter_by(status='pending').count()
-        confirmed_orders = Order.query.filter_by(status='confirmed').count()
+        pending_orders = Order.query.filter_by(status='pending').count()  # Awaiting payment
+        confirmed_orders = Order.query.filter_by(status='confirmed').count()  # Paid, needs fulfillment
+        completed_orders = Order.query.filter_by(status='completed').count()  # Already fulfilled
         feedbacks = Feedback.query.order_by(Feedback.date.desc()).limit(5).all()
         total_vegetables = Vegetable.query.count()
         total_feedback = Feedback.query.count()
@@ -712,25 +716,21 @@ def update_order_status(order_id):
     try:
         order = Order.query.get_or_404(order_id)
         
-        # Only reduce stock if order was pending (not already completed)
-        if order.status == 'pending':
-            # Reduce stock for each item in the order
-            for item in order.order_items:
-                vegetable = Vegetable.query.get(item.vegetable_id)
-                if vegetable:
-                    # item.quantity is already an integer
-                    quantity = item.quantity
-                    vegetable.stock -= quantity
-                    
-                    # Ensure stock doesn't go negative
-                    if vegetable.stock < 0:
-                        vegetable.stock = 0
-            
+        # Only mark as completed if order is confirmed (stock already reduced)
+        # Status flow: pending -> confirmed (after payment) -> completed (after fulfillment)
+        if order.status == 'confirmed':
+            # Stock has already been reduced when payment was confirmed
+            # Just mark order as completed (fulfilled by admin)
             order.status = 'completed'
             db.session.commit()
-            flash(f'Order #{order_id} marked as completed and stock updated!', 'success')
+            flash(f'Order #{order_id} marked as completed!', 'success')
+        elif order.status == 'pending':
+            # This shouldn't happen in normal flow, but handle it gracefully
+            flash(f'Order #{order_id} is still pending payment. Please wait for payment confirmation.', 'warning')
+        elif order.status == 'completed':
+            flash(f'Order #{order_id} is already completed!', 'info')
         else:
-            flash(f'Order #{order_id} already completed!', 'warning')
+            flash(f'Order #{order_id} has an unknown status: {order.status}', 'warning')
     
     except Exception as e:
         db.session.rollback()
