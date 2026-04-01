@@ -93,7 +93,7 @@
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('verify_qr_payment', order_id=order.id) }}">
-                        {{ csrf_token() }}
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="transaction_id" class="form-label">Transaction ID *</label>

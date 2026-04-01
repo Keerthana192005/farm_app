@@ -147,7 +147,7 @@
                             <p class="mb-1">{{ notification.message }}</p>
                             <small class="text-muted">{{ notification.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
                             <form method="POST" action="{{ url_for('mark_notification_read', notification_id=notification.id) }}" style="display: inline;">
-                                {{ csrf_token() }}
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-primary ms-2">Mark as Read</button>
                             </form>
                         </div>
