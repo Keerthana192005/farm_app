@@ -131,6 +131,18 @@
                         {% endif %}
                     {% endwith %}
 
+                    <!-- Database Status Alert -->
+                    {% if total_vegetables == 0 %}
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <h4 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> No Products Found</h4>
+                        <p class="mb-2">Your database appears to be empty. Click the button below to seed sample products.</p>
+                        <a href="{{ url_for('reseed_database') }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-database"></i> Seed Database with Sample Products
+                        </a>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endif %}
+
                     <!-- Notifications Alert -->
                     {% if notifications %}
                     <div class="alert alert-info alert-dismissible fade show" role="alert">

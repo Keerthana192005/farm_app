@@ -573,27 +573,45 @@ def admin_logout():
 @app.route('/admin/dashboard')
 @login_required
 def admin_dashboard():
+    ensure_db_initialized()  # Make sure DB is ready
+    
     try:
-        # Get fresh data from database - no caching
+        # Force fresh data from database without caching
+        db.session.expire_all()  # Clear session cache
+        
+        # Get all orders
         orders = Order.query.order_by(Order.date.desc()).all()
-        total_orders = Order.query.count()
-        pending_orders = Order.query.filter_by(status='pending').count()  # Awaiting payment
-        confirmed_orders = Order.query.filter_by(status='confirmed').count()  # Paid, needs fulfillment
-        completed_orders = Order.query.filter_by(status='completed').count()  # Already fulfilled
+        
+        # Count orders by status
+        total_orders = len(orders)
+        pending_orders = sum(1 for order in orders if order.status == 'pending')
+        confirmed_orders = sum(1 for order in orders if order.status == 'confirmed')
+        completed_orders = sum(1 for order in orders if order.status == 'completed')
+        
+        # Get vegetables and feedbacks
         feedbacks = Feedback.query.order_by(Feedback.date.desc()).limit(5).all()
-        total_vegetables = Vegetable.query.count()
+        vegetables = Vegetable.query.all()
+        total_vegetables = len(vegetables)
         total_feedback = Feedback.query.count()
         
         # Get unread notifications
         unread_notifications = Notification.query.filter_by(is_read=False).order_by(Notification.created_at.desc()).all()
         unread_count = len(unread_notifications)
+        
+        # Debug logging
+        print(f"✅ Dashboard data - Orders: {total_orders}, Pending: {pending_orders}, Confirmed: {confirmed_orders}, Vegetables: {total_vegetables}")
+        
     except Exception as e:
         # Handle case where tables don't exist yet
-        print(f"Database error: {e}")
+        print(f"⚠️ Database error in dashboard: {e}")
+        import traceback
+        traceback.print_exc()
+        
         orders = []
         total_orders = 0
         pending_orders = 0
         confirmed_orders = 0
+        completed_orders = 0
         feedbacks = []
         total_vegetables = 0
         total_feedback = 0
@@ -606,6 +624,7 @@ def admin_dashboard():
                          total_orders=total_orders,
                          pending_orders=pending_orders,
                          confirmed_orders=confirmed_orders,
+                         completed_orders=completed_orders,
                          feedbacks=feedbacks,
                          total_vegetables=total_vegetables,
                          total_feedback=total_feedback,
@@ -849,6 +868,97 @@ def mark_notification_read(notification_id):
         flash(f'Error updating notification: {e}', 'error')
     
     return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/db-check')
+@login_required
+def db_check():
+    """Diagnostic endpoint to check database status"""
+    ensure_db_initialized()
+    
+    try:
+        db.session.expire_all()
+        
+        vegetables_count = Vegetable.query.count()
+        orders_count = Order.query.count()
+        feedbacks_count = Feedback.query.count()
+        admins_count = Admin.query.count()
+        notifications_count = Notification.query.count()
+        
+        vegetables = Vegetable.query.all()
+        orders = Order.query.order_by(Order.date.desc()).limit(10).all()
+        
+        status = {
+            'database': 'Connected ✓',
+            'vegetables': vegetables_count,
+            'orders': orders_count,
+            'feedbacks': feedbacks_count,
+            'admins': admins_count,
+            'notifications': notifications_count,
+            'vegetables_list': [
+                {'id': v.id, 'name': v.name, 'price': v.price, 'stock': v.stock}
+                for v in vegetables[:5]
+            ],
+            'recent_orders': [
+                {
+                    'id': o.id,
+                    'customer': o.customer_name,
+                    'total': o.total,
+                    'status': o.status,
+                    'date': o.date.strftime('%Y-%m-%d %H:%M:%S') if o.date else None
+                }
+                for o in orders
+            ]
+        }
+        
+        return jsonify(status), 200
+        
+    except Exception as e:
+        return jsonify({
+            'database': 'Error',
+            'error': str(e),
+            'type': type(e).__name__
+        }), 500
+
+@app.route('/admin/reseed-database')
+@login_required
+def reseed_database():
+    """Reseed the database with sample data"""
+    try:
+        ensure_db_initialized()
+        
+        # Seed vegetables if empty or needs refresh
+        seed_data = [
+            {'name': 'Tomatoes', 'price': 40.0, 'stock': 50, 'description': 'Fresh red tomatoes from our farm'},
+            {'name': 'Potatoes', 'price': 30.0, 'stock': 100, 'description': 'High quality potatoes'},
+            {'name': 'Onions', 'price': 35.0, 'stock': 75, 'description': 'Fresh onions'},
+            {'name': 'Carrots', 'price': 45.0, 'stock': 60, 'description': 'Sweet and crunchy carrots'},
+            {'name': 'Spinach', 'price': 25.0, 'stock': 40, 'description': 'Fresh green spinach'},
+            {'name': 'Broccoli', 'price': 60.0, 'stock': 30, 'description': 'Organic broccoli'},
+            {'name': 'Bell Peppers', 'price': 55.0, 'stock': 45, 'description': 'Colorful bell peppers'},
+            {'name': 'Cucumbers', 'price': 35.0, 'stock': 55, 'description': 'Fresh cucumbers'},
+            {'name': 'Cabbage', 'price': 28.0, 'stock': 35, 'description': 'Green cabbage'},
+            {'name': 'Cauliflower', 'price': 50.0, 'stock': 25, 'description': 'Fresh cauliflower'}
+        ]
+        
+        # Check existing vegetables
+        existing_count = Vegetable.query.count()
+        
+        if existing_count == 0:
+            for data in seed_data:
+                vegetable = Vegetable(**data)
+                db.session.add(vegetable)
+            db.session.commit()
+            print(f"✅ Seeded {len(seed_data)} vegetables")
+            flash(f'✅ Database seeded with {len(seed_data)} vegetables', 'success')
+        else:
+            flash(f'Database already has {existing_count} vegetables. No seeding needed.', 'info')
+        
+        return redirect(url_for('admin_dashboard'))
+        
+    except Exception as e:
+        print(f"❌ Error seeding database: {e}")
+        flash(f'Error seeding database: {str(e)}', 'danger')
+        return redirect(url_for('admin_dashboard'))
 
 # Make the function available at module level
 def create_tables_and_seed():
