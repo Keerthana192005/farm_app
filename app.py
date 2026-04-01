@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, make_response
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
@@ -293,7 +293,7 @@ def checkout():
                 'price': vegetable.price
             })
         
-        # Create order (but don't commit yet for QR payment)
+        # Create order with pending status by default
         order = Order(
             customer_name=customer_name,
             phone=phone,
@@ -302,7 +302,8 @@ def checkout():
             total=total,
             payment_method=payment_method,
             delivery_time=delivery_time,
-            order_notes=order_notes
+            order_notes=order_notes,
+            status='pending'  # Set status explicitly
         )
         db.session.add(order)
         db.session.commit()
@@ -331,19 +332,23 @@ def checkout():
         
         # Handle different payment methods
         if payment_method == 'upi':
+            session['temp_cart'] = cart_items  # Store for recovery if needed
             return redirect(url_for('payment', order_id=order.id))
         elif payment_method == 'qr':
+            session['temp_cart'] = cart_items  # Store for recovery if needed
             return redirect(url_for('qr_payment', order_id=order.id))
         elif payment_method == 'cod':
-            # For COD, update stock and clear cart immediately
+            # For COD, update stock immediately
             for veg_id, item in cart_items.items():
                 vegetable = Vegetable.query.get(int(veg_id))
                 if vegetable:
                     vegetable.stock -= item['quantity']
             db.session.commit()
             
-            # Clear cart
-            session['cart'] = {}
+            # Clear cart BEFORE redirect to ensure it's cleared
+            session.pop('cart', None)
+            session.pop('temp_cart', None)
+            session.modified = True
             
             flash(f'Order placed successfully! Order ID: {order.id}', 'success')
             return redirect(url_for('order_confirmation', order_id=order.id))
@@ -458,8 +463,10 @@ def verify_qr_payment(order_id):
     
     db.session.commit()
     
-    # Clear cart
-    session['cart'] = {}
+    # Clear cart BEFORE redirect to ensure it's cleared
+    session.pop('cart', None)
+    session.pop('temp_cart', None)
+    session.modified = True
     
     flash('Payment successful! Your order has been confirmed.', 'success')
     return redirect(url_for('order_confirmation', order_id=order.id))
@@ -564,11 +571,14 @@ def admin_logout():
 @login_required
 def admin_dashboard():
     try:
+        # Get fresh data from database - no caching
         orders = Order.query.order_by(Order.date.desc()).all()
         total_orders = Order.query.count()
         pending_orders = Order.query.filter_by(status='pending').count()
+        confirmed_orders = Order.query.filter_by(status='confirmed').count()
         feedbacks = Feedback.query.order_by(Feedback.date.desc()).limit(5).all()
         total_vegetables = Vegetable.query.count()
+        total_feedback = Feedback.query.count()
         
         # Get unread notifications
         unread_notifications = Notification.query.filter_by(is_read=False).order_by(Notification.created_at.desc()).all()
@@ -579,19 +589,28 @@ def admin_dashboard():
         orders = []
         total_orders = 0
         pending_orders = 0
+        confirmed_orders = 0
         feedbacks = []
         total_vegetables = 0
+        total_feedback = 0
         unread_notifications = []
         unread_count = 0
     
-    return render_template('admin_dashboard.html', 
+    # Disable caching for admin dashboard
+    response = make_response(render_template('admin_dashboard.html', 
                          orders=orders, 
                          total_orders=total_orders,
                          pending_orders=pending_orders,
+                         confirmed_orders=confirmed_orders,
                          feedbacks=feedbacks,
                          total_vegetables=total_vegetables,
+                         total_feedback=total_feedback,
                          notifications=unread_notifications,
-                         unread_count=unread_count)
+                         unread_count=unread_count))
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 @app.route('/admin/products')
 @login_required

@@ -193,9 +193,28 @@
                     {% if order.payment_method == 'cod' %}
                     <li>Please keep exact amount ready for delivery</li>
                     {% endif %}
+                    <li style="margin-top: 10px; color: #155724;"><strong>⏱️ Redirecting to home page in <span id="redirect-countdown">10</span> seconds...</strong></li>
                 </ul>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// Auto-redirect to home page after 10 seconds
+let countdownSeconds = 10;
+const countdownElement = document.getElementById('redirect-countdown');
+if (countdownElement) {
+    setInterval(() => {
+        countdownSeconds--;
+        if (countdownElement) {
+            countdownElement.textContent = countdownSeconds;
+        }
+        if (countdownSeconds <= 0) {
+            window.location.href = '{{ url_for("home") }}';
+        }
+    }, 1000);
+}
+</script>
+
 {% endblock %}
