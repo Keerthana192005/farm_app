@@ -4,7 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
-from models import db, Vegetable, Order, OrderItem, Feedback, Admin
+from models import db, Vegetable, Order, OrderItem, Feedback, Admin, Notification
 from config import config
 from utils import generate_payment_qr_code
 
@@ -216,13 +216,14 @@ def contact():
         name = request.form.get('name')
         email = request.form.get('email')
         message = request.form.get('message')
+        rating = request.form.get('rating', type=int, default=5)
         
         if not all([name, email, message]):
             flash('Please fill in all required fields!', 'error')
             return redirect(url_for('contact'))
         
-        # Save feedback to database
-        feedback = Feedback(name=name, email=email, message=message)
+        # Save feedback to database including rating
+        feedback = Feedback(name=name, email=email, message=message, rating=rating)
         db.session.add(feedback)
         db.session.commit()
         
@@ -299,6 +300,16 @@ def checkout():
             )
             db.session.add(order_item)
         
+        db.session.commit()
+        
+        # Create notification for admin
+        notification = Notification(
+            title=f'New Order #{order.id}',
+            message=f'New order from {customer_name}: ₹{total} - {len(order_items_data)} items',
+            type='order',
+            order_id=order.id
+        )
+        db.session.add(notification)
         db.session.commit()
         
         # Handle different payment methods
@@ -515,6 +526,10 @@ def admin_dashboard():
         pending_orders = Order.query.filter_by(status='pending').count()
         feedbacks = Feedback.query.order_by(Feedback.date.desc()).limit(5).all()
         total_vegetables = Vegetable.query.count()
+        
+        # Get unread notifications
+        unread_notifications = Notification.query.filter_by(is_read=False).order_by(Notification.created_at.desc()).all()
+        unread_count = len(unread_notifications)
     except Exception as e:
         # Handle case where tables don't exist yet
         print(f"Database error: {e}")
@@ -523,13 +538,17 @@ def admin_dashboard():
         pending_orders = 0
         feedbacks = []
         total_vegetables = 0
+        unread_notifications = []
+        unread_count = 0
     
     return render_template('admin_dashboard.html', 
                          orders=orders, 
                          total_orders=total_orders,
                          pending_orders=pending_orders,
                          feedbacks=feedbacks,
-                         total_vegetables=total_vegetables)
+                         total_vegetables=total_vegetables,
+                         notifications=unread_notifications,
+                         unread_count=unread_count)
 
 @app.route('/admin/products')
 @login_required
@@ -741,6 +760,31 @@ def upload_image():
 
     flash(f'Updated image for {target}.', 'success')
     return redirect(url_for('admin_images'))
+
+@app.route('/admin/notifications')
+@login_required
+def admin_notifications():
+    """View all notifications"""
+    try:
+        notifications = Notification.query.order_by(Notification.created_at.desc()).all()
+    except Exception as e:
+        notifications = []
+    
+    return render_template('admin_notifications.html', notifications=notifications)
+
+@app.route('/admin/mark_notification_read/<int:notification_id>', methods=['POST'])
+@login_required
+def mark_notification_read(notification_id):
+    """Mark a notification as read"""
+    try:
+        notification = Notification.query.get_or_404(notification_id)
+        notification.is_read = True
+        db.session.commit()
+        flash('Notification marked as read', 'success')
+    except Exception as e:
+        flash(f'Error updating notification: {e}', 'error')
+    
+    return redirect(request.referrer or url_for('admin_notifications'))
 
 # Make the function available at module level
 def create_tables_and_seed():

@@ -91,6 +91,12 @@
                         <a href="{{ url_for('admin_customers') }}" class="nav-link">
                             <i class="fas fa-users"></i> Customers
                         </a>
+                        <a href="{{ url_for('admin_notifications') }}" class="nav-link">
+                            <i class="fas fa-bell"></i> Notifications
+                            {% if unread_count > 0 %}
+                                <span class="badge bg-danger ms-2">{{ unread_count }}</span>
+                            {% endif %}
+                        </a>
                         <hr>
                         <a href="{{ url_for('admin_change_password') }}" class="nav-link">
                             <i class="fas fa-key"></i> Change Password
@@ -126,6 +132,26 @@
                             {% endfor %}
                         {% endif %}
                     {% endwith %}
+
+                    <!-- Notifications Alert -->
+                    {% if notifications %}
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <h4 class="alert-heading"><i class="fas fa-bell"></i> New Notifications</h4>
+                        <hr>
+                        {% for notification in notifications %}
+                        <div class="notification-item mb-2">
+                            <strong>{{ notification.title }}</strong>
+                            <p class="mb-1">{{ notification.message }}</p>
+                            <small class="text-muted">{{ notification.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+                            <form method="POST" action="{{ url_for('mark_notification_read', notification_id=notification.id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-primary ms-2">Mark as Read</button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                        <hr>
+                        <a href="{{ url_for('admin_notifications') }}" class="btn btn-sm btn-info">View All Notifications</a>
+                    </div>
+                    {% endif %}
 
                     <!-- Statistics Cards -->
                     <div class="row mb-4">

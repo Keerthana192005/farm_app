@@ -56,6 +56,19 @@
                         </div>
 
                         <div class="mb-3">
+                            <label class="form-label">Rate Your Experience</label>
+                            <div class="d-flex gap-2" id="rating_stars">
+                                <input type="hidden" id="rating" name="rating" value="5">
+                                <i class="fas fa-star star-icon" data-rating="1" style="cursor: pointer; font-size: 1.5rem; color: #ffc107;"></i>
+                                <i class="fas fa-star star-icon" data-rating="2" style="cursor: pointer; font-size: 1.5rem; color: #ffc107;"></i>
+                                <i class="fas fa-star star-icon" data-rating="3" style="cursor: pointer; font-size: 1.5rem; color: #ffc107;"></i>
+                                <i class="fas fa-star star-icon" data-rating="4" style="cursor: pointer; font-size: 1.5rem; color: #ffc107;"></i>
+                                <i class="fas fa-star star-icon" data-rating="5" style="cursor: pointer; font-size: 1.5rem; color: #ffc107;"></i>
+                            </div>
+                            <small class="text-muted d-block mt-2">Your rating: <strong id="rating_value">5 stars</strong></small>
+                        </div>
+
+                        <div class="mb-3">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="newsletter" name="newsletter">
                                 <label class="form-check-label" for="newsletter">
@@ -140,4 +153,54 @@
 
     </div>
 </div>
+
+<script>
+    // Star rating functionality
+    document.querySelectorAll('.star-icon').forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = this.getAttribute('data-rating');
+            document.getElementById('rating').value = rating;
+            document.getElementById('rating_value').textContent = rating + ' star' + (rating != 1 ? 's' : '');
+            
+            // Update star colors
+            document.querySelectorAll('.star-icon').forEach(s => {
+                if (s.getAttribute('data-rating') <= rating) {
+                    s.style.color = '#ffc107';
+                } else {
+                    s.style.color = '#ccc';
+                }
+            });
+        });
+        
+        // Add hover effect
+        star.addEventListener('mouseover', function() {
+            const rating = this.getAttribute('data-rating');
+            document.querySelectorAll('.star-icon').forEach(s => {
+                if (s.getAttribute('data-rating') <= rating) {
+                    s.style.color = '#ff9800';
+                } else {
+                    s.style.color = '#ccc';
+                }
+            });
+        });
+    });
+    
+    // Reset on mouse leave
+    document.getElementById('rating_stars').addEventListener('mouseleave', function() {
+        const currentRating = document.getElementById('rating').value;
+        document.querySelectorAll('.star-icon').forEach(s => {
+            if (s.getAttribute('data-rating') <= currentRating) {
+                s.style.color = '#ffc107';
+            } else {
+                s.style.color = '#ccc';
+            }
+        });
+    });
+    
+    // Initialize first 5 stars as selected
+    document.querySelectorAll('.star-icon').forEach(s => {
+        s.style.color = '#ffc107';
+    });
+</script>
+
 {% endblock %}

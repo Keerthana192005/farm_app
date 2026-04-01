@@ -78,7 +78,22 @@ class Feedback(db.Model):
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), nullable=True)
     message = db.Column(db.Text, nullable=False)
+    rating = db.Column(db.Integer, default=5)  # 1-5 star rating
     date = db.Column(db.DateTime, default=datetime.utcnow)
     
     def __repr__(self):
         return f'<Feedback {self.id}>'
+
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    type = db.Column(db.String(50), default='order')  # order, feedback, etc.
+    order_id = db.Column(db.Integer, db.ForeignKey('order.id'), nullable=True)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    order = db.relationship('Order', backref='notifications')
+    
+    def __repr__(self):
+        return f'<Notification {self.id}>'
