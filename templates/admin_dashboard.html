@@ -143,27 +143,6 @@
                     </div>
                     {% endif %}
 
-                    <!-- Notifications Alert -->
-                    {% if notifications %}
-                    <div class="alert alert-info alert-dismissible fade show" role="alert">
-                        <h4 class="alert-heading"><i class="fas fa-bell"></i> New Notifications</h4>
-                        <hr>
-                        {% for notification in notifications %}
-                        <div class="notification-item mb-2">
-                            <strong>{{ notification.title }}</strong>
-                            <p class="mb-1">{{ notification.message }}</p>
-                            <small class="text-muted">{{ notification.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
-                            <form method="POST" action="{{ url_for('mark_notification_read', notification_id=notification.id) }}" style="display: inline;">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-sm btn-primary ms-2">Mark as Read</button>
-                            </form>
-                        </div>
-                        {% endfor %}
-                        <hr>
-                        <a href="{{ url_for('admin_notifications') }}" class="btn btn-sm btn-info">View All Notifications</a>
-                    </div>
-                    {% endif %}
-
                     <!-- Statistics Cards -->
                     <div class="row mb-4">
                         <div class="col-md-3 mb-3">
@@ -209,6 +188,15 @@
                                 </div>
                                 <h3>{{ feedbacks|length }}</h3>
                                 <p class="text-muted mb-0">Feedbacks</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-card">
+                                <div class="stat-icon bg-danger text-white">
+                                    <i class="fas fa-rupee-sign"></i>
+                                </div>
+                                <h3>₹{{ "%.0f"|format(total_revenue) }}</h3>
+                                <p class="text-muted mb-0">Total Revenue</p>
                             </div>
                         </div>
                     </div>
@@ -300,51 +288,34 @@
                     <div class="row mb-4">
                         <div class="col-12">
                             <div class="card">
-                                <div class="card-header bg-info text-white">
-                                    <h5 class="mb-0"><i class="fas fa-bell"></i> All Notifications ({{ notifications|length }})</h5>
+                                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0"><i class="fas fa-bell"></i> Notifications
+                                        {% if unread_count > 0 %}
+                                        <span class="badge bg-danger ms-2">{{ unread_count }} new</span>
+                                        {% endif %}
+                                    </h5>
                                 </div>
                                 <div class="card-body">
                                     {% if notifications %}
-                                        {% set unread = notifications|selectattr('is_read', 'equalto', False)|list %}
-                                        {% if unread %}
-                                        <div class="mb-4">
-                                            <h6 class="text-warning mb-3"><i class="fas fa-exclamation-circle"></i> Unread ({{ unread|length }})</h6>
-                                            {% for notification in unread %}
-                                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                                                <div class="d-flex justify-content-between align-items-start">
-                                                    <div>
-                                                        <h6 class="alert-heading mb-1">{{ notification.title }}</h6>
-                                                        <p class="mb-1">{{ notification.message }}</p>
-                                                        <small class="text-muted"><i class="fas fa-clock"></i> {{ notification.created_at.strftime('%d-%m-%Y %H:%M:%S') }}</small>
-                                                    </div>
-                                                    <form method="POST" action="{{ url_for('mark_notification_read', notification_id=notification.id) }}" style="display: inline;">
-                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                        <button type="submit" class="btn btn-sm btn-primary ms-2">
-                                                            <i class="fas fa-check"></i> Mark as Read
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                            {% endfor %}
-                                        </div>
-                                        {% endif %}
-
-                                        {% set read = notifications|selectattr('is_read', 'equalto', True)|list %}
-                                        {% if read %}
-                                        <hr>
-                                        <div>
-                                            <h6 class="text-muted mb-3"><i class="fas fa-check-double"></i> Read ({{ read|length }})</h6>
-                                            {% for notification in read[:5] %}
-                                            <div class="alert alert-light border-left" role="alert">
-                                                <h6 class="alert-heading mb-1">{{ notification.title }}</h6>
+                                        {% for notification in notifications %}
+                                        <div class="d-flex justify-content-between align-items-start p-2 mb-2 rounded {{ 'bg-warning bg-opacity-10 border border-warning' if not notification.is_read else 'bg-light' }}">
+                                            <div>
+                                                <h6 class="mb-1">{{ notification.title }}</h6>
                                                 <p class="mb-1 small">{{ notification.message }}</p>
-                                                <small class="text-muted"><i class="fas fa-clock"></i> {{ notification.created_at.strftime('%d-%m-%Y %H:%M:%S') }}</small>
+                                                <small class="text-muted"><i class="fas fa-clock"></i> {{ notification.created_at.strftime('%d-%m-%Y %H:%M') }}</small>
                                             </div>
-                                            {% endfor %}
+                                            {% if not notification.is_read %}
+                                            <form method="POST" action="{{ url_for('mark_notification_read', notification_id=notification.id) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-primary ms-2">Mark Read</button>
+                                            </form>
+                                            {% else %}
+                                            <span class="badge bg-secondary ms-2">Read</span>
+                                            {% endif %}
                                         </div>
-                                        {% endif %}
+                                        {% endfor %}
                                     {% else %}
-                                    <div class="alert alert-info">
+                                    <div class="alert alert-info mb-0">
                                         <i class="fas fa-info-circle"></i> No notifications yet.
                                     </div>
                                     {% endif %}
@@ -509,14 +480,6 @@
             });
         }
     </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

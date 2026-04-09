@@ -594,15 +594,14 @@ def admin_dashboard():
         total_vegetables = len(vegetables)
         total_feedback = Feedback.query.count()
         
-        # Get unread notifications
-        unread_notifications = Notification.query.filter_by(is_read=False).order_by(Notification.created_at.desc()).all()
-        unread_count = len(unread_notifications)
+        # Get all notifications (unread + recent read)
+        all_notifications = Notification.query.order_by(Notification.created_at.desc()).limit(20).all()
+        unread_count = Notification.query.filter_by(is_read=False).count()
+        total_revenue = sum(order.total for order in orders)
         
-        # Debug logging
-        print(f"✅ Dashboard data - Orders: {total_orders}, Pending: {pending_orders}, Confirmed: {confirmed_orders}, Vegetables: {total_vegetables}")
+        print(f"✅ Dashboard - Orders: {total_orders}, Pending: {pending_orders}, Confirmed: {confirmed_orders}, Vegetables: {total_vegetables}")
         
     except Exception as e:
-        # Handle case where tables don't exist yet
         print(f"⚠️ Database error in dashboard: {e}")
         import traceback
         traceback.print_exc()
@@ -615,10 +614,10 @@ def admin_dashboard():
         feedbacks = []
         total_vegetables = 0
         total_feedback = 0
-        unread_notifications = []
+        all_notifications = []
         unread_count = 0
+        total_revenue = 0
     
-    # Disable caching for admin dashboard
     response = make_response(render_template('admin_dashboard.html', 
                          orders=orders, 
                          total_orders=total_orders,
@@ -628,8 +627,9 @@ def admin_dashboard():
                          feedbacks=feedbacks,
                          total_vegetables=total_vegetables,
                          total_feedback=total_feedback,
-                         notifications=unread_notifications,
-                         unread_count=unread_count))
+                         notifications=all_notifications,
+                         unread_count=unread_count,
+                         total_revenue=total_revenue))
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
@@ -858,7 +858,6 @@ def upload_image():
 @app.route('/admin/mark_notification_read/<int:notification_id>', methods=['POST'])
 @login_required
 def mark_notification_read(notification_id):
-    """Mark a notification as read"""
     try:
         notification = Notification.query.get_or_404(notification_id)
         notification.is_read = True
@@ -866,8 +865,34 @@ def mark_notification_read(notification_id):
         flash('Notification marked as read', 'success')
     except Exception as e:
         flash(f'Error updating notification: {e}', 'error')
-    
     return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/notifications')
+@login_required
+def admin_notifications():
+    all_notifications = Notification.query.order_by(Notification.created_at.desc()).all()
+    return render_template('admin_notifications.html', notifications=all_notifications)
+
+@app.route('/admin/change_username', methods=['POST'])
+@login_required
+def admin_change_username():
+    data = request.get_json()
+    current_password = data.get('current_password', '')
+    new_username = data.get('new_username', '').strip()
+
+    if not current_password or not new_username:
+        return jsonify({'success': False, 'error': 'All fields are required'})
+
+    admin = Admin.query.get(current_user.id)
+    if not admin or not admin.check_password(current_password):
+        return jsonify({'success': False, 'error': 'Incorrect password'})
+
+    if Admin.query.filter_by(username=new_username).first():
+        return jsonify({'success': False, 'error': 'Username already taken'})
+
+    admin.username = new_username
+    db.session.commit()
+    return jsonify({'success': True})
 
 @app.route('/admin/db-check')
 @login_required

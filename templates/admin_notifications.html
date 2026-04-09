@@ -6,184 +6,51 @@
     <title>Notifications - Campus Krishi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .sidebar {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            min-height: 100vh;
-            color: white;
-        }
-        .sidebar .nav-link {
-            color: white;
-            padding: 1rem;
-            border-radius: 5px;
-            margin: 2px 0;
-        }
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            background-color: rgba(255,255,255,0.1);
-        }
-        .main-content {
-            padding: 2rem;
-        }
-        .notification-card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            border-left: 4px solid #28a745;
-        }
-        .notification-card.read {
-            opacity: 0.7;
-            border-left-color: #ccc;
-        }
-        .notification-card .notification-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 0.5rem;
-        }
-        .notification-card .notification-message {
-            color: #666;
-            margin-bottom: 0.5rem;
-        }
-        .notification-card .notification-date {
-            font-size: 0.85rem;
-            color: #999;
-        }
-    </style>
 </head>
-<body>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <div class="col-md-3 col-lg-2 p-0">
-                <div class="sidebar">
-                    <div class="p-3">
-                        <h4><i class="fas fa-leaf"></i> Campus Krishi</h4>
-                        <p class="small mb-0">Admin Panel</p>
-                    </div>
-                    <nav class="nav flex-column p-3">
-                        <a href="{{ url_for('admin_dashboard') }}" class="nav-link">
-                            <i class="fas fa-tachometer-alt"></i> Dashboard
-                        </a>
-                        <a href="{{ url_for('admin_analytics') }}" class="nav-link">
-                            <i class="fas fa-chart-line"></i> Analytics
-                        </a>
-                        <a href="{{ url_for('inventory_management') }}" class="nav-link">
-                            <i class="fas fa-warehouse"></i> Inventory
-                        </a>
-                        <a href="{{ url_for('admin_products') }}" class="nav-link">
-                            <i class="fas fa-carrot"></i> Products
-                        </a>
-                        <a href="{{ url_for('add_product') }}" class="nav-link">
-                            <i class="fas fa-plus"></i> Add Product
-                        </a>
-                        <a href="{{ url_for('admin_images') }}" class="nav-link">
-                            <i class="fas fa-image"></i> Manage Images
-                        </a>
-                        <a href="{{ url_for('admin_reports') }}" class="nav-link">
-                            <i class="fas fa-chart-bar"></i> Reports
-                        </a>
-                        <a href="{{ url_for('admin_customers') }}" class="nav-link">
-                            <i class="fas fa-users"></i> Customers
-                        </a>
-                        <a href="{{ url_for('admin_notifications') }}" class="nav-link active">
-                            <i class="fas fa-bell"></i> Notifications
-                        </a>
-                        <hr>
-                        <a href="{{ url_for('admin_change_password') }}" class="nav-link">
-                            <i class="fas fa-key"></i> Change Password
-                        </a>
-                        <a href="{{ url_for('admin_logout') }}" class="nav-link">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </a>
-                    </nav>
-                </div>
-            </div>
-
-            <!-- Main Content -->
-            <div class="col-md-9 col-lg-10">
-                <div class="main-content">
-                    <!-- Header -->
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h2><i class="fas fa-bell"></i> Notifications</h2>
-                        <div>
-                            <a href="{{ url_for('home') }}" class="btn btn-sm btn-outline-success">
-                                <i class="fas fa-eye"></i> View Site
-                            </a>
-                        </div>
-                    </div>
-
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
-                                    {{ message }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endwith %}
-
-                    <!-- Notifications List -->
-                    {% if notifications %}
-                        {% set unread = notifications|selectattr('is_read', 'equalto', False)|list %}
-                        {% if unread %}
-                        <div class="mb-4">
-                            <h4 class="text-warning"><i class="fas fa-exclamation-circle"></i> Unread Notifications ({{ unread|length }})</h4>
-                            {% for notification in unread %}
-                            <div class="notification-card">
-                                <div class="notification-title">{{ notification.title }}</div>
-                                <div class="notification-message">{{ notification.message }}</div>
-                                <div class="notification-date"><i class="fas fa-clock"></i> {{ notification.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
-                                <form method="POST" action="{{ url_for('mark_notification_read', notification_id=notification.id) }}" style="display: inline;">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn btn-sm btn-primary mt-2">
-                                        <i class="fas fa-check"></i> Mark as Read
-                                    </button>
-                                </form>
-                                {% if notification.order_id %}
-                                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-sm btn-info mt-2">
-                                    <i class="fas fa-external-link-alt"></i> View Order #{{ notification.order_id }}
-                                </a>
-                                {% endif %}
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-
-                        {% set read = notifications|selectattr('is_read', 'equalto', True)|list %}
-                        {% if read %}
-                        <div class="mb-4">
-                            <h4 class="text-muted"><i class="fas fa-check-double"></i> Read Notifications ({{ read|length }})</h4>
-                            {% for notification in read %}
-                            <div class="notification-card read">
-                                <div class="notification-title">{{ notification.title }}</div>
-                                <div class="notification-message">{{ notification.message }}</div>
-                                <div class="notification-date"><i class="fas fa-clock"></i> {{ notification.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
-                                {% if notification.order_id %}
-                                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-sm btn-outline-info mt-2">
-                                    <i class="fas fa-external-link-alt"></i> View Order #{{ notification.order_id }}
-                                </a>
-                                {% endif %}
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    {% else %}
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> No notifications yet.
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
+<body class="bg-light">
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3><i class="fas fa-bell"></i> All Notifications</h3>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
+                    {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% if notifications %}
+        {% for notification in notifications %}
+        <div class="card mb-2 border-{{ 'warning' if not notification.is_read else 'light' }}">
+            <div class="card-body d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="mb-1">
+                        {% if not notification.is_read %}<span class="badge bg-warning text-dark me-1">New</span>{% endif %}
+                        {{ notification.title }}
+                    </h6>
+                    <p class="mb-1 text-muted">{{ notification.message }}</p>
+                    <small class="text-muted"><i class="fas fa-clock"></i> {{ notification.created_at.strftime('%d-%m-%Y %H:%M') }}</small>
+                </div>
+                {% if not notification.is_read %}
+                <form method="POST" action="{{ url_for('mark_notification_read', notification_id=notification.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-primary">Mark Read</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="alert alert-info"><i class="fas fa-info-circle"></i> No notifications yet.</div>
+    {% endif %}
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
