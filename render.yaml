@@ -3,6 +3,7 @@ services:
     name: farm-app
     env: python
     plan: free
+    pythonVersion: 3.11.9
     buildCommand: "pip install -r requirements.txt"
     startCommand: "gunicorn --bind 0.0.0.0:$PORT wsgi:app"
     envVars:
