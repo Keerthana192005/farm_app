@@ -714,13 +714,8 @@ def create_tables_and_seed():
         db.create_all()
         ensure_feedback_rating_column()
         
-        # Create default admin if not exists
-        if Admin.query.count() == 0:
-            default_admin = Admin(username='admin')
-            default_admin.set_password('admin123')
-            db.session.add(default_admin)
-            db.session.commit()
-            print("Default admin account created: username='admin', password='admin123'")
+        # Do not create a default admin automatically for security reasons.
+        # Admin users should be created explicitly using a database tool or migration.
         
         # Update image filenames for existing vegetables if missing
         image_map = {'Tomatoes': 'tomato.jpeg', 'Brinjal': 'brinjal.jpeg', 'Cauliflower': 'brinjal.jpeg'}

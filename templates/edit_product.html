@@ -152,13 +152,17 @@
                                                 <div class="form-text">Leave empty to keep current image</div>
                                             </div>
                                             <div id="image-preview" class="mb-3">
-                                                {% if vegetable.image %}
                                                 <div class="mb-3">
                                                     <p class="small text-muted">Current Image:</p>
+                                                    {% if vegetable.image %}
                                                     <img src="{{ url_for('static', filename='uploads/' + vegetable.image) }}" 
-                                                         class="preview-image" alt="{{ vegetable.name }}">
+                                                         class="preview-image" alt="{{ vegetable.name }}"
+                                                         onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=Image+Not+Found';">
+                                                    {% else %}
+                                                    <img src="https://via.placeholder.com/200x200?text=No+Image" 
+                                                         class="preview-image" alt="No image available">
+                                                    {% endif %}
                                                 </div>
-                                                {% endif %}
                                             </div>
                                         </div>
 
