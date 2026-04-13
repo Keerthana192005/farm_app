@@ -722,19 +722,32 @@ def create_tables_and_seed():
             db.session.commit()
             print("Default admin account created: username='admin', password='admin123'")
         
+        # Update image filenames for existing vegetables if missing
+        tomato = Vegetable.query.filter_by(name='Tomatoes').first()
+        if tomato and not tomato.image:
+            tomato.image = 'tomato.jpeg'
+        brinjal = Vegetable.query.filter_by(name='Brinjal').first()
+        cauliflower = Vegetable.query.filter_by(name='Cauliflower').first()
+        if cauliflower and not cauliflower.image:
+            cauliflower.name = 'Brinjal'
+            cauliflower.image = 'brinjal.jpeg'
+        if brinjal and not brinjal.image:
+            brinjal.image = 'brinjal.jpeg'
+        db.session.commit()
+
         # Seed data if database is empty
         if Vegetable.query.count() == 0:
             seed_data = [
-                {'name': 'Tomatoes', 'price': 40.0, 'stock': 50, 'description': 'Fresh red tomatoes from our farm'},
-                {'name': 'Potatoes', 'price': 30.0, 'stock': 100, 'description': 'High quality potatoes'},
-                {'name': 'Onions', 'price': 35.0, 'stock': 75, 'description': 'Fresh onions'},
-                {'name': 'Carrots', 'price': 45.0, 'stock': 60, 'description': 'Sweet and crunchy carrots'},
-                {'name': 'Spinach', 'price': 25.0, 'stock': 40, 'description': 'Fresh green spinach'},
-                {'name': 'Broccoli', 'price': 60.0, 'stock': 30, 'description': 'Organic broccoli'},
-                {'name': 'Bell Peppers', 'price': 55.0, 'stock': 45, 'description': 'Colorful bell peppers'},
-                {'name': 'Cucumbers', 'price': 35.0, 'stock': 55, 'description': 'Fresh cucumbers'},
-                {'name': 'Cabbage', 'price': 28.0, 'stock': 35, 'description': 'Green cabbage'},
-                {'name': 'Cauliflower', 'price': 50.0, 'stock': 25, 'description': 'Fresh cauliflower'}
+                {'name': 'Tomatoes', 'price': 40.0, 'stock': 50, 'image': 'tomato.jpeg', 'description': 'Fresh red tomatoes from our farm'},
+                {'name': 'Potatoes', 'price': 30.0, 'stock': 100, 'image': None, 'description': 'High quality potatoes'},
+                {'name': 'Onions', 'price': 35.0, 'stock': 75, 'image': None, 'description': 'Fresh onions'},
+                {'name': 'Carrots', 'price': 45.0, 'stock': 60, 'image': None, 'description': 'Sweet and crunchy carrots'},
+                {'name': 'Spinach', 'price': 25.0, 'stock': 40, 'image': None, 'description': 'Fresh green spinach'},
+                {'name': 'Broccoli', 'price': 60.0, 'stock': 30, 'image': None, 'description': 'Organic broccoli'},
+                {'name': 'Bell Peppers', 'price': 55.0, 'stock': 45, 'image': None, 'description': 'Colorful bell peppers'},
+                {'name': 'Cucumbers', 'price': 35.0, 'stock': 55, 'image': None, 'description': 'Fresh cucumbers'},
+                {'name': 'Cabbage', 'price': 28.0, 'stock': 35, 'image': None, 'description': 'Green cabbage'},
+                {'name': 'Brinjal', 'price': 50.0, 'stock': 25, 'image': 'brinjal.jpeg', 'description': 'Fresh brinjal'}
             ]
             
             for data in seed_data:
