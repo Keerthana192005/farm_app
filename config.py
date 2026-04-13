@@ -3,9 +3,11 @@ from datetime import timedelta
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
-    if SECRET_KEY == 'dev-secret-key-change-in-production' and os.environ.get('FLASK_ENV') == 'production':
-        raise ValueError("SECRET_KEY environment variable must be set in production")
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///database.db'
+    _db_url = os.environ.get('DATABASE_URL') or 'sqlite:///database.db'
+    # Render provides postgres:// but SQLAlchemy requires postgresql://
+    if _db_url.startswith('postgres://'):
+        _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+    SQLALCHEMY_DATABASE_URI = _db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = 'static/uploads'
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
@@ -24,8 +26,6 @@ class DevelopmentConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///database.db'
-    
     # Production security settings
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True

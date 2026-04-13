@@ -2,14 +2,11 @@
 WSGI entry point for production deployment
 """
 import os
-from app import create_app
+os.environ.setdefault('FLASK_ENV', 'production')
 
-# Create app instance
-app = create_app('production')
+from app import app, create_tables_and_seed
 
-# Initialize database if needed
 with app.app_context():
-    from app import create_tables_and_seed
     create_tables_and_seed()
 
 if __name__ == "__main__":
