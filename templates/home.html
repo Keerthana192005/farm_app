@@ -4,27 +4,24 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section class="hero-section" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); min-height: 600px; display: flex; align-items: center;">
+<section class="hero-section bg-primary text-white py-5">
     <div class="container">
         <div class="row align-items-center">
-            <div class="col-lg-5 text-center mb-4 mb-lg-0">
-                <div style="background: #ffffff; padding: 40px 20px; border-radius: 0;">
-                    <img src="{{ url_for('static', filename='uploads/nmitlogo.png') }}" 
-                         alt="NMIT Logo" 
-                         style="height: 280px; width: auto; display: block; margin: 0 auto;">
-                </div>
-            </div>
-            <div class="col-lg-7 text-white ps-lg-5">
-                <h1 class="display-3 fw-bold mb-3" style="font-size: 3.5rem;">Campus Krishi</h1>
-                <p class="fs-5 mb-4" style="line-height: 1.8;">Growing Sustainability</p>
-                <p class="lead mb-4">A student-led living lab for urban farming, climate resilience, and community innovation at NMIT.</p>
-                <div class="mt-5">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold">Campus Krishi: Growing Sustainability</h1>
+                <p class="lead">A student-led living lab for urban farming, climate resilience, and community innovation.</p>
+                <div class="mt-4">
                     <a href="{{ url_for('about') }}" class="btn btn-light btn-lg me-3">
                         <i class="fas fa-seedling"></i> Learn More
                     </a>
                     <a href="{{ url_for('process') }}" class="btn btn-outline-light btn-lg">
                         Our Approach
                     </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <i class="fas fa-leaf display-1"></i>
                 </div>
             </div>
         </div>
