@@ -56,9 +56,12 @@ logs/
 instance/
 !instance/.gitkeep
 
-# Uploads
-static/uploads/*
+# Uploads - allow static images, ignore user-uploaded files at runtime
 !static/uploads/.gitkeep
+!static/uploads/*.jpeg
+!static/uploads/*.jpg
+!static/uploads/*.png
+!static/uploads/*.mp4
 
 # Coverage reports
 htmlcov/
