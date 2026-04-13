@@ -4,7 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from sqlalchemy import inspect, text
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from models import db, Vegetable, Order, OrderItem, Feedback, Admin
 from config import config
 from utils import generate_payment_qr_code
@@ -39,7 +39,8 @@ def create_app(config_name=None):
     app.logger = logging.getLogger(__name__)
     
     db.init_app(app)
-    
+    app.jinja_env.globals['timedelta'] = timedelta
+
     with app.app_context():
         db.create_all()
         ensure_feedback_rating_column()

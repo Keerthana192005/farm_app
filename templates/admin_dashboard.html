@@ -191,7 +191,7 @@
                                                     <td>#{{ order.id }}</td>
                                                     <td>{{ order.customer_name }}</td>
                                                     <td>₹{{ "%.2f"|format(order.total) }}</td>
-                                                    <td>{{ order.date.strftime('%d-%m-%Y') }}</td>
+                                                    <td>{{ (order.date + timedelta(hours=5, minutes=30)).strftime('%d-%m-%Y %I:%M %p') }}</td>
                                                     <td>
                                                         <span class="order-status badge {% if order.status == 'completed' %}bg-success{% else %}bg-warning{% endif %}">
                                                             {{ order.status.title() }}
