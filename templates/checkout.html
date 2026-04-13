@@ -17,9 +17,6 @@
         <!-- Order Form -->
         <div class="col-lg-8">
             <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">Delivery Information</h5>
-                </div>
                 <div class="card-body">
                     <form method="POST" id="checkout-form">
                         <div class="row">
@@ -35,21 +32,14 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label for="address" class="form-label">Delivery Address *</label>
+                            <label for="address" class="form-label">Delivery Address (Block and Room no.) *</label>
                             <textarea class="form-control" id="address" name="address" rows="3" required 
                                       placeholder="Enter your complete delivery address including landmark"></textarea>
                         </div>
 
                         <div class="mb-3">
-                            <label for="delivery_time" class="form-label">Preferred Delivery Date & Time *</label>
-                            <input type="datetime-local" class="form-control" id="delivery_time" name="delivery_time" required>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
-                                <label for="email" class="form-label">Email (Optional)</label>
-                                <input type="email" class="form-control" id="email" name="email">
-                            </div>
+                            <label for="email" class="form-label">Email (Optional)</label>
+                            <input type="email" class="form-control" id="email" name="email">
                         </div>
 
                         <div class="mb-3">
@@ -113,23 +103,16 @@
                             <h5>Total Amount:</h5>
                             <h5 class="text-success">₹{{ "%.2f"|format(cart_total) }}</h5>
                         </div>
+                        <div class="mt-4 p-3 bg-light rounded border">
+                            <h6 class="mb-2">Delivery Partner</h6>
+                            <p class="mb-1"><strong>Abhishek</strong></p>
+                            <p class="mb-0">Contact: 7676247255</p>
+                        </div>
                     </div>
 
                 </div>
             </div>
 
-            <!-- Terms and Conditions -->
-            <div class="card mt-3">
-                <div class="card-body">
-                    <h6 class="card-title">Important Notes:</h6>
-                    <ul class="list-unstyled small">
-                        <li><i class="fas fa-check text-success"></i> Fresh quality guaranteed</li>
-                        <li><i class="fas fa-check text-success"></i> Free delivery on all orders</li>
-                        <li><i class="fas fa-check text-success"></i> Order confirmation via SMS</li>
-                        <li><i class="fas fa-check text-success"></i> 100% refund if not satisfied</li>
-                    </ul>
-                </div>
-            </div>
         </div>
     </div>
     {% else %}

@@ -179,6 +179,7 @@
                                                 <tr>
                                                     <th>Order ID</th>
                                                     <th>Customer</th>
+                                                    <th>Items</th>
                                                     <th>Total</th>
                                                     <th>Date</th>
                                                     <th>Status</th>
@@ -190,6 +191,11 @@
                                                 <tr>
                                                     <td>#{{ order.id }}</td>
                                                     <td>{{ order.customer_name }}</td>
+                                                    <td>
+                                                        {% for item in order.order_items %}
+                                                            <div>{{ item.vegetable.name }} x {{ item.quantity }}kg</div>
+                                                        {% endfor %}
+                                                    </td>
                                                     <td>₹{{ "%.2f"|format(order.total) }}</td>
                                                     <td>{{ (order.date + timedelta(hours=5, minutes=30)).strftime('%d-%m-%Y %I:%M %p') }}</td>
                                                     <td>
