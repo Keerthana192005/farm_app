@@ -9,7 +9,7 @@
             <h1 class="mb-4">
                 <i class="fas fa-shopping-cart"></i> Shopping Cart
                 {% if session.get('cart') %}
-                <span class="badge bg-success ms-2">{{ session.get('cart')|length }} items</span>
+                <span class="badge bg-primary ms-2">{{ session.get('cart')|length }} items</span>
                 {% endif %}
             </h1>
         </div>
@@ -20,7 +20,7 @@
         <!-- Cart Items -->
         <div class="col-lg-8">
             <div class="card">
-                <div class="card-header bg-success text-white">
+                <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">Cart Items</h5>
                 </div>
                 <div class="card-body">
@@ -123,6 +123,13 @@
                             <h5>Total:</h5>
                             <h5 class="text-success cart-total">₹{{ "%.2f"|format(cart_total) }}</h5>
                         </div>
+                    </div>
+                    
+                    <!-- Delivery Partner Information -->
+                    <div class="mt-3 p-3 bg-light rounded">
+                        <h6 class="mb-2"><i class="fas fa-truck"></i> Delivery Partner</h6>
+                        <p class="mb-1"><strong>Abhishek</strong></p>
+                        <p class="mb-0 text-muted">Contact: 7676247255</p>
                     </div>
                     
                     <div class="d-grid gap-2">

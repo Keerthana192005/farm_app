@@ -42,10 +42,14 @@
         <div class="loading-spinner"></div>
     </div>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('home') }}">
-                <i class="fas fa-leaf"></i> Campus Krishi
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('home') }}">
+                <img src="{{ url_for('static', filename='uploads/nitte logo.jpeg') }}" 
+                     alt="NITTE Logo" 
+                     class="me-2" 
+                     style="height: 40px; width: auto;">
+                <span>Campus Krishi</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
