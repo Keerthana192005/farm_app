@@ -723,17 +723,14 @@ def create_tables_and_seed():
             print("Default admin account created: username='admin', password='admin123'")
         
         # Update image filenames for existing vegetables if missing
-        tomato = Vegetable.query.filter_by(name='Tomatoes').first()
-        if tomato and not tomato.image:
-            tomato.image = 'tomato.jpeg'
-        brinjal = Vegetable.query.filter_by(name='Brinjal').first()
-        cauliflower = Vegetable.query.filter_by(name='Cauliflower').first()
-        if cauliflower and not cauliflower.image:
-            cauliflower.name = 'Brinjal'
-            cauliflower.image = 'brinjal.jpeg'
-        if brinjal and not brinjal.image:
-            brinjal.image = 'brinjal.jpeg'
+        image_map = {'Tomatoes': 'tomato.jpeg', 'Brinjal': 'brinjal.jpeg', 'Cauliflower': 'brinjal.jpeg'}
+        for veg_name, img_file in image_map.items():
+            veg = Vegetable.query.filter_by(name=veg_name).first()
+            if veg:
+                veg.image = img_file
+                print(f"Updated image for {veg_name}: {img_file}")
         db.session.commit()
+        print("Image migration complete")
 
         # Seed data if database is empty
         if Vegetable.query.count() == 0:
