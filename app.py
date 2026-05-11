@@ -33,6 +33,7 @@ def ensure_feedback_rating_column():
 
 from flask import Flask
 
+
 app = Flask(__name__)
 
 def create_app(config_name=None):
@@ -1475,7 +1476,7 @@ def init_db():
             print("✅ Database initialized successfully")
         except Exception as e:
             print(f"⚠️ Database initialization error: {e}")
-app = create_app()
+application = create_app()
 
 if __name__ == '__main__':
     create_tables_and_seed()
