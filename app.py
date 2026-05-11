@@ -29,10 +29,13 @@ def ensure_feedback_rating_column():
             db.session.commit()
 
 
-def create_app(config_name=None):
-    from flask import Flask
+
+
+from flask import Flask
 
 app = Flask(__name__)
+
+def create_app(config_name=None):
     
     # Load configuration
     config_name = config_name or os.environ.get('FLASK_ENV', 'development')
@@ -1473,6 +1476,7 @@ def init_db():
         except Exception as e:
             print(f"⚠️ Database initialization error: {e}")
 app = create_app()
+
 if __name__ == '__main__':
     create_tables_and_seed()
     app.run(debug=True, host='127.0.0.1', port=8080)
