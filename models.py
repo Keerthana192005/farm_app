@@ -77,11 +77,13 @@ class Feedback(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), nullable=True)
+    rating = db.Column(db.Integer, nullable=False, default=5)
     message = db.Column(db.Text, nullable=False)
     rating = db.Column(db.Integer, default=5)  # 1-5 star rating
     date = db.Column(db.DateTime, default=datetime.utcnow)
     
     def __repr__(self):
+<<<<<<< HEAD
         return f'<Feedback {self.id}>'
 
 class Notification(db.Model):
@@ -97,3 +99,6 @@ class Notification(db.Model):
     
     def __repr__(self):
         return f'<Notification {self.id}>'
+=======
+        return f'<Feedback {self.id} ({self.rating}★)>'
+>>>>>>> f0cf3aaebcdfadd57343fa47bc5a5c138a69e28b

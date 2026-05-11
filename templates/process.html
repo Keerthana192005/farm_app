@@ -7,9 +7,55 @@
     <div class="row">
         <div class="col-12">
             <h1 class="text-center mb-5">What We Do</h1>
-            <p class="text-center text-muted mb-5">At Bhooswarga, we integrate practice, learning, and innovation through:</p>
+            <p class="text-center text-muted mb-4">At Bhooswarga, we integrate practice, learning, and innovation through:</p>
         </div>
     </div>
+
+    <!-- Process Images -->
+    <section class="mb-5">
+        <div class="row g-3">
+            <div class="col-md-6 col-lg-3">
+                <div class="card overflow-hidden rounded shadow-sm">
+                    <img src="{{ url_for('static', filename='uploads/process1.jpeg') }}" class="card-img-top" alt="Process 1">
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card overflow-hidden rounded shadow-sm">
+                    <img src="{{ url_for('static', filename='uploads/process2.jpeg') }}" class="card-img-top" alt="Process 2">
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card overflow-hidden rounded shadow-sm">
+                    <img src="{{ url_for('static', filename='uploads/process3.jpeg') }}" class="card-img-top" alt="Process 3">
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card overflow-hidden rounded shadow-sm">
+                    <img src="{{ url_for('static', filename='uploads/process4.jpeg') }}" class="card-img-top" alt="Process 4">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Video -->
+    <section class="mb-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card rounded shadow-sm overflow-hidden">
+                    <div class="ratio ratio-16x9">
+                        <video controls>
+                            <source src="{{ url_for('static', filename='uploads/fertilizer.mp4') }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">Process Video</h5>
+                        <p class="card-text small text-muted">Watch how our fertilizer and growing process works on the Bhooswarga farm.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- What We Do -->
     <section class="mb-5 bg-light py-5 rounded">

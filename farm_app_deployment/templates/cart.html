@@ -9,7 +9,7 @@
             <h1 class="mb-4">
                 <i class="fas fa-shopping-cart"></i> Shopping Cart
                 {% if session.get('cart') %}
-                <span class="badge bg-success ms-2">{{ session.get('cart')|length }} items</span>
+                <span class="badge bg-primary ms-2">{{ session.get('cart')|length }} items</span>
                 {% endif %}
             </h1>
         </div>
@@ -20,7 +20,7 @@
         <!-- Cart Items -->
         <div class="col-lg-8">
             <div class="card">
-                <div class="card-header bg-success text-white">
+                <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">Cart Items</h5>
                 </div>
                 <div class="card-body">
@@ -101,7 +101,7 @@
         <!-- Cart Summary -->
         <div class="col-lg-4">
             <div class="card">
-                <div class="card-header bg-success text-white">
+                <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">Order Summary</h5>
                 </div>
                 <div class="card-body">
@@ -125,6 +125,13 @@
                         </div>
                     </div>
                     
+                    <!-- Delivery Partner Information -->
+                    <div class="mt-3 p-3 bg-light rounded">
+                        <h6 class="mb-2"><i class="fas fa-truck"></i> Delivery Partner</h6>
+                        <p class="mb-1"><strong>Abhishek</strong></p>
+                        <p class="mb-0 text-muted">Contact: 7676247255</p>
+                    </div>
+                    
                     <div class="d-grid gap-2">
                         <a href="{{ url_for('checkout') }}" class="btn btn-success btn-lg">
                             <i class="fas fa-credit-card"></i> Proceed to Checkout
@@ -136,19 +143,6 @@
                 </div>
             </div>
 
-            <!-- Delivery Info -->
-            <div class="card mt-3">
-                <div class="card-body">
-                    <h6 class="card-title">
-                        <i class="fas fa-truck text-success"></i> Delivery Information
-                    </h6>
-                    <ul class="list-unstyled small">
-                        <li><i class="fas fa-check text-success"></i> Free delivery on all orders</li>
-                        <li><i class="fas fa-check text-success"></i> Same day delivery before 12 PM</li>
-                        <li><i class="fas fa-check text-success"></i> Fresh quality guaranteed</li>
-                    </ul>
-                </div>
-            </div>
         </div>
     </div>
     {% else %}

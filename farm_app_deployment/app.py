@@ -248,19 +248,23 @@ def create_app(config_name=None):
     # Admin routes
     @app.route('/admin/login', methods=['GET', 'POST'])
     def admin_login():
+        admin_user = os.environ.get('ADMIN_USERNAME')
+        admin_pass = os.environ.get('ADMIN_PASSWORD')
+
         if request.method == 'POST':
             username = request.form.get('username')
             password = request.form.get('password')
-            
-            # Simple admin authentication (in production, use proper database)
-            if username == 'admin' and password == 'admin123':
+
+            if admin_user and admin_pass and username == admin_user and password == admin_pass:
                 admin = Admin(1)
                 login_user(admin)
                 flash('Login successful!', 'success')
                 return redirect(url_for('admin_dashboard'))
+            elif not admin_user or not admin_pass:
+                flash('Admin login is not configured. Please set ADMIN_USERNAME and ADMIN_PASSWORD.', 'error')
             else:
                 flash('Invalid credentials!', 'error')
-        
+
         return render_template('admin_login.html')
 
     @app.route('/admin/logout')

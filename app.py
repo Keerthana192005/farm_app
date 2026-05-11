@@ -5,11 +5,29 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from sqlalchemy import inspect, text
 import os
 from datetime import datetime, timedelta
+<<<<<<< HEAD
 from models import db, Vegetable, Order, OrderItem, Feedback, Admin, Notification
+=======
+from models import db, Vegetable, Order, OrderItem, Feedback, Admin
+>>>>>>> f0cf3aaebcdfadd57343fa47bc5a5c138a69e28b
 from config import config
 from utils import generate_payment_qr_code
+import logging
+
+def ensure_feedback_rating_column():
+    inspector = inspect(db.engine)
+    if 'feedback' in inspector.get_table_names():
+        columns = [col['name'] for col in inspector.get_columns('feedback')]
+        if 'rating' not in columns:
+            if db.engine.dialect.name == 'sqlite':
+                db.session.execute(text('ALTER TABLE feedback ADD COLUMN rating INTEGER DEFAULT 5'))
+            else:
+                db.session.execute(text('ALTER TABLE feedback ADD COLUMN rating INTEGER DEFAULT 5'))
+            db.session.commit()
+
 
 def create_app(config_name=None):
     from flask import Flask
@@ -20,9 +38,27 @@ app = Flask(__name__)
     config_name = config_name or os.environ.get('FLASK_ENV', 'development')
     app.config.from_object(config[config_name])
     
+<<<<<<< HEAD
     # Add secret key for CSRF protection (use from config or generate)
     if 'SECRET_KEY' not in app.config:
         app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'
+=======
+    # Configure logging
+    if not app.debug:
+        logging.basicConfig(filename='app.log', level=logging.INFO,
+                          format='%(asctime)s - %(levelname)s - %(message)s')
+    else:
+        logging.basicConfig(level=logging.INFO)
+    
+    app.logger = logging.getLogger(__name__)
+    
+    db.init_app(app)
+    app.jinja_env.globals['timedelta'] = timedelta
+
+    with app.app_context():
+        db.create_all()
+        ensure_feedback_rating_column()
+>>>>>>> f0cf3aaebcdfadd57343fa47bc5a5c138a69e28b
     
     # Initialize extensions
     db.init_app(app)
@@ -119,6 +155,11 @@ def ensure_db_initialized():
 @app.route('/')
 def home():
     ensure_db_initialized()
+    vegetables = Vegetable.query.filter(Vegetable.stock > 0).all()
+    return render_template('home.html', vegetables=vegetables)
+
+@app.route('/vegetables')
+def vegetables():
     vegetables = Vegetable.query.filter(Vegetable.stock > 0).all()
     return render_template('home.html', vegetables=vegetables)
 
@@ -235,14 +276,26 @@ def contact():
         name = request.form.get('name')
         email = request.form.get('email')
         message = request.form.get('message')
+<<<<<<< HEAD
         rating = request.form.get('rating', type=int, default=5)
+=======
+        rating = request.form.get('rating', type=int)
+>>>>>>> f0cf3aaebcdfadd57343fa47bc5a5c138a69e28b
         
-        if not all([name, email, message]):
+        if not name or not message:
             flash('Please fill in all required fields!', 'error')
             return redirect(url_for('contact'))
         
+<<<<<<< HEAD
         # Save feedback to database including rating
         feedback = Feedback(name=name, email=email, message=message, rating=rating)
+=======
+        if rating is None or rating < 1 or rating > 5:
+            rating = 5
+        
+        # Save feedback to database
+        feedback = Feedback(name=name, email=email, rating=rating, message=message)
+>>>>>>> f0cf3aaebcdfadd57343fa47bc5a5c138a69e28b
         db.session.add(feedback)
         db.session.commit()
         
@@ -266,10 +319,28 @@ def checkout():
         email = request.form.get('email')
         delivery_time = request.form.get('delivery_time')
         order_notes = request.form.get('notes')
-        payment_method = request.form.get('payment_method')
+        payment_method = request.form.get('payment_method', 'cod')
         
-        if not all([customer_name, phone, address]):
-            flash('Please fill in all required fields!', 'error')
+        # Basic validation
+        import re
+        if not customer_name or len(customer_name.strip()) < 2:
+            flash('Please enter a valid name (at least 2 characters)', 'error')
+            return redirect(url_for('checkout'))
+        
+        if not phone or not re.match(r'^\d{10}$', phone):
+            flash('Please enter a valid 10-digit phone number', 'error')
+            return redirect(url_for('checkout'))
+        
+        if not address or len(address.strip()) < 5:
+            flash('Please enter a complete delivery address', 'error')
+            return redirect(url_for('checkout'))
+        
+        if email and not re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', email):
+            flash('Please enter a valid email address', 'error')
+            return redirect(url_for('checkout'))
+        
+        if payment_method not in ['cod', 'upi', 'qr']:
+            flash('Please select a valid payment method', 'error')
             return redirect(url_for('checkout'))
         
         # Calculate total and create order
@@ -295,6 +366,7 @@ def checkout():
                 'price': vegetable.price
             })
         
+<<<<<<< HEAD
         # Create order with pending status by default
         order = Order(
             customer_name=customer_name,
@@ -359,6 +431,60 @@ def checkout():
             return redirect(url_for('order_confirmation', order_id=order.id))
         
         return redirect(url_for('payment', order_id=order.id))
+=======
+        # Use transaction for atomic operation
+        try:
+            with db.session.begin_nested():
+                # Check stock availability again and update atomically
+                for item_data in order_items_data:
+                    veg = item_data['vegetable']
+                    if veg.stock < item_data['quantity']:
+                        raise ValueError(f'Insufficient stock for {veg.name}')
+                    veg.stock -= item_data['quantity']
+                
+                # Create order
+                order = Order(
+                    customer_name=customer_name,
+                    phone=phone,
+                    address=address,
+                    email=email,
+                    total=total,
+                    payment_method=payment_method,
+                    delivery_time=delivery_time,
+                    order_notes=order_notes
+                )
+                db.session.add(order)
+                db.session.flush()  # Get order.id
+                
+                # Create order items
+                for item_data in order_items_data:
+                    order_item = OrderItem(
+                        order_id=order.id,
+                        vegetable_id=item_data['vegetable'].id,
+                        quantity=item_data['quantity'],
+                        price=item_data['price']
+                    )
+                    db.session.add(order_item)
+                
+                db.session.commit()
+                session['cart'] = {}
+                if payment_method == 'cod':
+                    flash('Your order has been placed successfully. Please keep the amount ready for delivery.', 'success')
+                    return redirect(url_for('order_confirmation', order_id=order.id))
+                else:
+                    flash('Your order has been created. Please complete payment to confirm your order.', 'success')
+                    return redirect(url_for('payment', order_id=order.id))
+        except ValueError as e:
+            db.session.rollback()
+            app.logger.warning(f"Checkout failed for {customer_name}: {str(e)}")
+            flash(str(e), 'error')
+            return redirect(url_for('checkout'))
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"Checkout error for {customer_name}: {str(e)}")
+            flash('An error occurred while processing your order. Please try again.', 'error')
+            return redirect(url_for('checkout'))
+>>>>>>> f0cf3aaebcdfadd57343fa47bc5a5c138a69e28b
     
     # Calculate total for display
     cart_total = 0
@@ -401,15 +527,11 @@ def process_payment(order_id):
     order = Order.query.get_or_404(order_id)
     payment_method = request.form.get('payment_method')
     
-    if payment_method == 'razorpay':
-        # Razorpay integration
-        return redirect(url_for('razorpay_payment', order_id=order.id))
-    elif payment_method == 'payu':
-        # PayU integration
-        return redirect(url_for('payu_payment', order_id=order_id))
-    elif payment_method == 'phonepe':
-        # PhonePe integration
-        return redirect(url_for('phonepe_payment', order_id=order_id))
+    if payment_method == 'cod':
+        # COD is already handled in checkout
+        return redirect(url_for('order_confirmation', order_id=order.id))
+    elif payment_method == 'qr':
+        return redirect(url_for('qr_payment', order_id=order.id))
     else:
         flash('Invalid payment method selected!', 'error')
         return redirect(url_for('payment', order_id=order_id))
@@ -440,47 +562,31 @@ def qr_payment(order_id):
 def verify_qr_payment(order_id):
     order = Order.query.get_or_404(order_id)
     
-    # Get payment verification data
-    transaction_id = request.form.get('transaction_id')
-    upi_id = request.form.get('upi_id')
-    amount = request.form.get('amount')
-    
-    if not all([transaction_id, upi_id, amount]):
-        flash('Please provide payment details!', 'error')
-        return redirect(url_for('qr_payment', order_id=order_id))
-    
-    # Verify amount matches order total
-    if float(amount) != order.total:
-        flash('Payment amount does not match order total!', 'error')
-        return redirect(url_for('qr_payment', order_id=order_id))
-    
-    # Update order with payment details
+    # Complete the order after the customer confirms payment
     order.payment_method = 'upi'
     order.payment_status = 'completed'
-    order.payment_id = transaction_id
     order.status = 'confirmed'
     
-    # Update stock
-    for item in order.order_items:
-        vegetable = Vegetable.query.get(item.vegetable_id)
-        if vegetable:
-            vegetable.stock -= item.quantity
-    
+    # Stock is already updated during checkout
     db.session.commit()
     
+<<<<<<< HEAD
     # Clear cart BEFORE redirect to ensure it's cleared
     session.pop('cart', None)
     session.pop('temp_cart', None)
     session.modified = True
+=======
+    # Clear cart for the session
+    session['cart'] = {}
+>>>>>>> f0cf3aaebcdfadd57343fa47bc5a5c138a69e28b
     
-    flash('Payment successful! Your order has been confirmed.', 'success')
+    app.logger.info(f"Order {order.id} payment confirmed for {order.customer_name}")
+    flash('Payment confirmed! Your order is complete.', 'success')
     return redirect(url_for('order_confirmation', order_id=order.id))
 
 @app.route('/order_confirmation/<int:order_id>')
 def order_confirmation(order_id):
     order = Order.query.get_or_404(order_id)
-    
-    # Get order items for display
     order_items = []
     for item in order.order_items:
         order_items.append({
@@ -489,8 +595,38 @@ def order_confirmation(order_id):
             'price': item.price,
             'subtotal': item.price * item.quantity
         })
-    
+    session['cart'] = {}
     return render_template('order_confirmation.html', order=order, order_items=order_items)
+
+@app.route('/track_order')
+def track_order():
+    order_id = request.args.get('order_id', type=int)
+    email = request.args.get('email')
+    if order_id and email:
+        order = Order.query.filter_by(id=order_id, email=email).first()
+        if order:
+            order_items = []
+            for item in order.order_items:
+                order_items.append({
+                    'vegetable': item.vegetable,
+                    'quantity': item.quantity,
+                    'price': item.price,
+                    'subtotal': item.price * item.quantity
+                })
+            return render_template('order_status.html', order=order, order_items=order_items)
+        flash('Order not found. Please verify your Order ID and email.', 'error')
+    return render_template('track_order.html')
+
+@app.route('/razorpay_success/<int:order_id>', methods=['POST'])
+def razorpay_success(order_id):
+    order = Order.query.get_or_404(order_id)
+    order.payment_method = 'razorpay'
+    order.payment_status = 'completed'
+    order.status = 'confirmed'
+    db.session.commit()
+    session['cart'] = {}
+    flash('Payment successful! Your order is confirmed.', 'success')
+    return redirect(url_for('order_confirmation', order_id=order.id))
 
 # Admin routes
 @app.route('/admin/login', methods=['GET', 'POST'])
@@ -592,6 +728,7 @@ def admin_dashboard():
         
         # Get vegetables and feedbacks
         feedbacks = Feedback.query.order_by(Feedback.date.desc()).limit(5).all()
+<<<<<<< HEAD
         vegetables = Vegetable.query.all()
         total_vegetables = len(vegetables)
         total_feedback = Feedback.query.count()
@@ -603,6 +740,10 @@ def admin_dashboard():
         
         print(f"✅ Dashboard - Orders: {total_orders}, Pending: {pending_orders}, Confirmed: {confirmed_orders}, Vegetables: {total_vegetables}")
         
+=======
+        total_vegetables = Vegetable.query.count()
+        total_feedbacks = Feedback.query.count()
+>>>>>>> f0cf3aaebcdfadd57343fa47bc5a5c138a69e28b
     except Exception as e:
         print(f"⚠️ Database error in dashboard: {e}")
         import traceback
@@ -615,10 +756,14 @@ def admin_dashboard():
         completed_orders = 0
         feedbacks = []
         total_vegetables = 0
+<<<<<<< HEAD
         total_feedback = 0
         all_notifications = []
         unread_count = 0
         total_revenue = 0
+=======
+        total_feedbacks = 0
+>>>>>>> f0cf3aaebcdfadd57343fa47bc5a5c138a69e28b
     
     response = make_response(render_template('admin_dashboard.html', 
                          orders=orders, 
@@ -628,6 +773,7 @@ def admin_dashboard():
                          completed_orders=completed_orders,
                          feedbacks=feedbacks,
                          total_vegetables=total_vegetables,
+<<<<<<< HEAD
                          total_feedback=total_feedback,
                          notifications=all_notifications,
                          unread_count=unread_count,
@@ -636,6 +782,9 @@ def admin_dashboard():
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
     return response
+=======
+                         total_feedbacks=total_feedbacks)
+>>>>>>> f0cf3aaebcdfadd57343fa47bc5a5c138a69e28b
 
 @app.route('/admin/products')
 @login_required
@@ -764,6 +913,7 @@ def update_order_status(order_id):
 @login_required
 def admin_reports():
     try:
+<<<<<<< HEAD
         orders = Order.query.order_by(Order.date.desc()).all()
         total_orders = Order.query.count()
         completed_orders = Order.query.filter_by(status='completed').count()
@@ -783,12 +933,33 @@ def admin_reports():
                          completed_orders=completed_orders,
                          pending_orders=pending_orders,
                          total_revenue=total_revenue)
+=======
+        total_orders = Order.query.count()
+        completed_orders = Order.query.filter_by(status='completed').count()
+        pending_orders = Order.query.filter_by(status='pending').count()
+        total_revenue = db.session.query(db.func.sum(Order.total)).scalar() or 0
+        total_customers = len({(order.customer_name, order.phone, order.email) for order in Order.query.all()})
+        recent_orders = Order.query.order_by(Order.date.desc()).limit(10).all()
+    except Exception as e:
+        print(f"Database error: {e}")
+        total_orders = completed_orders = pending_orders = total_revenue = total_customers = 0
+        recent_orders = []
+
+    return render_template('admin_reports.html',
+                           total_orders=total_orders,
+                           completed_orders=completed_orders,
+                           pending_orders=pending_orders,
+                           total_revenue=total_revenue,
+                           total_customers=total_customers,
+                           recent_orders=recent_orders)
+>>>>>>> f0cf3aaebcdfadd57343fa47bc5a5c138a69e28b
 
 @app.route('/admin/customers')
 @login_required
 def admin_customers():
     try:
         orders = Order.query.order_by(Order.date.desc()).all()
+<<<<<<< HEAD
         customers = {}
         for order in orders:
             if order.customer_name not in customers:
@@ -809,6 +980,27 @@ def admin_customers():
         customer_list = []
     
     return render_template('admin_customers.html', customers=customer_list)
+=======
+        unique_customers = {}
+        for order in orders:
+            key = (order.customer_name, order.phone, order.email)
+            if key not in unique_customers:
+                unique_customers[key] = {
+                    'name': order.customer_name,
+                    'phone': order.phone,
+                    'email': order.email,
+                    'orders': 0,
+                    'last_order': order.date
+                }
+            unique_customers[key]['orders'] += 1
+            if order.date > unique_customers[key]['last_order']:
+                unique_customers[key]['last_order'] = order.date
+    except Exception as e:
+        print(f"Database error: {e}")
+        unique_customers = {}
+
+    return render_template('admin_customers.html', customers=unique_customers.values())
+>>>>>>> f0cf3aaebcdfadd57343fa47bc5a5c138a69e28b
 
 @app.route('/admin/images')
 @login_required
@@ -857,6 +1049,7 @@ def upload_image():
     flash(f'Updated image for {target}.', 'success')
     return redirect(url_for('admin_images'))
 
+<<<<<<< HEAD
 @app.route('/admin/mark_notification_read/<int:notification_id>', methods=['POST'])
 @login_required
 def mark_notification_read(notification_id):
@@ -988,31 +1181,40 @@ def reseed_database():
         return redirect(url_for('admin_dashboard'))
 
 # Make the function available at module level
+=======
+
+>>>>>>> f0cf3aaebcdfadd57343fa47bc5a5c138a69e28b
 def create_tables_and_seed():
     with app.app_context():
         db.create_all()
+        ensure_feedback_rating_column()
         
-        # Create default admin if not exists
-        if Admin.query.count() == 0:
-            default_admin = Admin(username='admin')
-            default_admin.set_password('admin123')
-            db.session.add(default_admin)
-            db.session.commit()
-            print("Default admin account created: username='admin', password='admin123'")
+        # Do not create a default admin automatically for security reasons.
+        # Admin users should be created explicitly using a database tool or migration.
         
+        # Update image filenames for existing vegetables if missing
+        image_map = {'Tomatoes': 'tomato.jpeg', 'Brinjal': 'brinjal.jpeg', 'Cauliflower': 'brinjal.jpeg'}
+        for veg_name, img_file in image_map.items():
+            veg = Vegetable.query.filter_by(name=veg_name).first()
+            if veg:
+                veg.image = img_file
+                print(f"Updated image for {veg_name}: {img_file}")
+        db.session.commit()
+        print("Image migration complete")
+
         # Seed data if database is empty
         if Vegetable.query.count() == 0:
             seed_data = [
-                {'name': 'Tomatoes', 'price': 40.0, 'stock': 50, 'description': 'Fresh red tomatoes from our farm'},
-                {'name': 'Potatoes', 'price': 30.0, 'stock': 100, 'description': 'High quality potatoes'},
-                {'name': 'Onions', 'price': 35.0, 'stock': 75, 'description': 'Fresh onions'},
-                {'name': 'Carrots', 'price': 45.0, 'stock': 60, 'description': 'Sweet and crunchy carrots'},
-                {'name': 'Spinach', 'price': 25.0, 'stock': 40, 'description': 'Fresh green spinach'},
-                {'name': 'Broccoli', 'price': 60.0, 'stock': 30, 'description': 'Organic broccoli'},
-                {'name': 'Bell Peppers', 'price': 55.0, 'stock': 45, 'description': 'Colorful bell peppers'},
-                {'name': 'Cucumbers', 'price': 35.0, 'stock': 55, 'description': 'Fresh cucumbers'},
-                {'name': 'Cabbage', 'price': 28.0, 'stock': 35, 'description': 'Green cabbage'},
-                {'name': 'Cauliflower', 'price': 50.0, 'stock': 25, 'description': 'Fresh cauliflower'}
+                {'name': 'Tomatoes', 'price': 40.0, 'stock': 50, 'image': 'tomato.jpeg', 'description': 'Fresh red tomatoes from our farm'},
+                {'name': 'Potatoes', 'price': 30.0, 'stock': 100, 'image': None, 'description': 'High quality potatoes'},
+                {'name': 'Onions', 'price': 35.0, 'stock': 75, 'image': None, 'description': 'Fresh onions'},
+                {'name': 'Carrots', 'price': 45.0, 'stock': 60, 'image': None, 'description': 'Sweet and crunchy carrots'},
+                {'name': 'Spinach', 'price': 25.0, 'stock': 40, 'image': None, 'description': 'Fresh green spinach'},
+                {'name': 'Broccoli', 'price': 60.0, 'stock': 30, 'image': None, 'description': 'Organic broccoli'},
+                {'name': 'Bell Peppers', 'price': 55.0, 'stock': 45, 'image': None, 'description': 'Colorful bell peppers'},
+                {'name': 'Cucumbers', 'price': 35.0, 'stock': 55, 'image': None, 'description': 'Fresh cucumbers'},
+                {'name': 'Cabbage', 'price': 28.0, 'stock': 35, 'image': None, 'description': 'Green cabbage'},
+                {'name': 'Brinjal', 'price': 50.0, 'stock': 25, 'image': 'brinjal.jpeg', 'description': 'Fresh brinjal'}
             ]
             
             for data in seed_data:
