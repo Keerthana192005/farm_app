@@ -1482,3 +1482,10 @@ if __name__ == '__main__':
     create_tables_and_seed()
     app.run(debug=True, host='127.0.0.1', port=8080)
    
+from flask import Flask
+
+vercel_app = Flask(__name__)
+
+@vercel_app.route("/")
+def home():
+    return "Krishi App Running Successfully"
