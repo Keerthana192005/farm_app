@@ -1442,7 +1442,7 @@ def init_db():
         try:
             # Create all tables
             db.create_all()
-            
+
             # Check if admin exists
             admin = Admin.query.filter_by(email='admin@gmail.com').first()
             if not admin:
@@ -1452,40 +1452,16 @@ def init_db():
                 )
                 db.session.add(admin)
                 db.session.commit()
-                print("✅ Admin user created: admin@gmail.com / admin123")
-            
-            # Check if vegetables exist
-            if Vegetable.query.count() == 0:
-                vegetables = [
-                    Vegetable(name='Tomatoes', description='Fresh red tomatoes from our farm', price=40, stock=50),
-                    Vegetable(name='Potatoes', description='High quality potatoes', price=30, stock=75),
-                    Vegetable(name='Onions', description='Fresh onions', price=35, stock=60),
-                    Vegetable(name='Carrots', description='Fresh orange carrots', price=25, stock=45),
-                    Vegetable(name='Cucumber', description='Fresh cucumber', price=20, stock=40),
-                    Vegetable(name='Capsicum', description='Fresh capsicum', price=45, stock=35),
-                    Vegetable(name='Broccoli', description='Fresh broccoli', price=50, stock=30),
-                    Vegetable(name='Spinach', description='Fresh spinach leaves', price=15, stock=55),
-                    Vegetable(name='Cabbage', description='Fresh cabbage', price=20, stock=50),
-                    Vegetable(name='Lettuce', description='Fresh lettuce', price=25, stock=40),
-                ]
-                for veg in vegetables:
-                    db.session.add(veg)
-                db.session.commit()
-                print(f"✅ {len(vegetables)} vegetables added to database")
-            
+                print("✅ Admin user created")
+
             print("✅ Database initialized successfully")
+
         except Exception as e:
             print(f"⚠️ Database initialization error: {e}")
-application = create_app()
+
+# Vercel Flask entrypoint
+application = app
 
 if __name__ == '__main__':
     create_tables_and_seed()
     app.run(debug=True, host='127.0.0.1', port=8080)
-   
-from flask import Flask
-
-vercel_app = Flask(__name__)
-
-@vercel_app.route("/")
-def home():
-    return "Krishi App Running Successfully"
